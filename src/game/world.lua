@@ -24,6 +24,99 @@ local pPos = {80, 80}
 
 local oily = {20, 80}
 
+local oilCells = {}
+table.insert(oilCells, oily)
+
+local t = 0
+local nextBleedDt = 0.2
+local nextBleedT = t + nextBleedDt
+local bleedCells = 1
+
+
+
+local function neighbors(pos)
+    return {
+        {pos[1]-1, pos[2]},
+        {pos[1]+1, pos[2]},
+        {pos[1], pos[2]-1},
+        {pos[1], pos[2]+1}
+    }
+    --[[ return {
+        {pos[1]-1, pos[2]-1},
+        {pos[1], pos[2]-1},
+        {pos[1]+1, pos[2]-1},
+        {pos[1]-1, pos[2]},
+        {pos[1]+1, pos[2]},
+        {pos[1]-1, pos[2]+1},
+        {pos[1], pos[2]+1},
+        {pos[1]+1, pos[2]+1},
+    } ]]
+end
+
+local function frontier(cells)
+    local candidates = {}
+    for _, c in ipairs(cells) do
+        local neighs = neighbors(c)
+        for _, n in ipairs(neighs) do
+            candidates[ tostring(n[1] .. ',' .. n[2]) ] = n
+        end
+    end
+
+    for _, c in ipairs(cells) do
+        candidates[ tostring(c[1] .. ',' .. c[2]) ] = nil
+    end
+
+    local res = {}
+    for _, c in pairs(candidates) do
+        table.insert(res, c)
+    end
+
+    return res
+end
+
+local function bleed(m, cells)
+    local alreadyBled = 0
+    local newCells = utils.shuffle( frontier(cells) )
+    for _, nc in ipairs(newCells) do
+        local ok, v = pcall(function()
+            return m[nc[1]][nc[2]]
+        end)
+
+        if ok and v == EARTH then
+            m[nc[1]][nc[2]] = OIL
+            table.insert(cells, nc)
+            alreadyBled = alreadyBled + 1
+            if alreadyBled >= bleedCells then
+                return
+            end
+        end
+    end
+end
+
+local function carvePlayer(pPos, m)
+    local x = pPos[1]
+    local y = pPos[2]
+    m[x][y] = EARTH
+    m[x+1][y] = EARTH
+    m[x][y+1] = EARTH
+    m[x+1][y+1] = EARTH
+end
+
+local function posCanBePlayer(pPos, m)
+    local v = m[pPos[1]][pPos[2]]
+    return v == EARTH or v == DIRT
+end
+
+local function isPlayerPosValid(pPos, m)
+    local x = pPos[1]
+    local y = pPos[2]
+    if not posCanBePlayer(pPos, m) then return false end
+    if not posCanBePlayer({x+1, y}, m) then return false end
+    if not posCanBePlayer({x, y+1}, m) then return false end
+    if not posCanBePlayer({x+1, y+1}, m) then return false end
+    return true
+end
+
 function World:new(o)
   o = o or {}
   setmetatable(o, self)
@@ -34,13 +127,10 @@ function World:new(o)
     o.m[x][1] = SKY
     o.m[x][2] = SKY
   end
-  -- o.m[1][3] = EARTH
 
   o.m[oily[1]][oily[2]] = OIL
 
-  o:carvePlayer()
-  
-  -- print(utils.tableToString(o.m))
+  carvePlayer(pPos, o.m)
 
   o.canvas = G.newCanvas(o.width, o.height)
   o:redraw()
@@ -48,15 +138,12 @@ function World:new(o)
 end
 
 function World:update(dt)
-end
-
-function World:carvePlayer()
-    local x = pPos[1]
-    local y = pPos[2]
-    self.m[x][y] = EARTH
-    self.m[x+1][y] = EARTH
-    self.m[x][y+1] = EARTH
-    self.m[x+1][y+1] = EARTH
+    t = t + dt
+    if t >= nextBleedT then
+        bleed(self.m, oilCells)
+        self:redraw()
+        nextBleedT = t + nextBleedDt
+    end
 end
 
 function World:redraw()
@@ -106,6 +193,8 @@ function World:draw()
 end
 
 function World:onKey(key)
+    local pPosOld = { pPos[1], pPos[2] }
+
     if key == 'left' then
         pPos[1] = pPos[1] - 1
     elseif key == 'right' then
@@ -114,11 +203,26 @@ function World:onKey(key)
         pPos[2] = pPos[2] - 1
     elseif key == 'down' then
         pPos[2] = pPos[2] + 1
+    elseif key == 'space' then
+        bleed(self.m, oilCells)
     elseif key == 'escape' then
         love.event.quit()
         return
+    else
+        print(key)
     end
-    self:carvePlayer()
+
+    local ok, isValid = pcall(isPlayerPosValid, pPos, self.m)
+    if not ok or (ok and not isValid) then
+        pPos = pPosOld
+    end
+
+    --if not isPlayerPosValid(pPos, self.m) then
+    --    pPos = pPosOld
+    --end
+
+    carvePlayer(pPos, self.m)
+
     self:redraw()
 end
 
