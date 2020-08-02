@@ -1,0 +1,6 @@
+.DS_Store
+src/assets
+dist
+binaries
+love-binaries
+___other
