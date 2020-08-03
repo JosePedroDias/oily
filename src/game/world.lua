@@ -12,23 +12,28 @@ local World = {x=0, y=0, width=consts.W, height=consts.H}
 local S = 6
 
 local t = 0
-local nextPlayerMoveDt = 0.1
+local nextPlayerMoveDt = 0.05
 local nextPlayerMoveT = nextPlayerMoveDt
-local nextBleedDt = 0.075
+local nextBleedDt = 0.1
 local nextBleedT
+local winCapture = 300
 
 local players = {}
 players[1] = {
     color = { 1, 0, 0 },
-    pos = { 30, 80 },
+    pos =  { 130, 80 },
+    sink = { 130,  4 },
     dPos = { 0, 0 },
-    bindings = { 'left', 'right', 'up', 'down' }
+    captured = 0,
+    bindings = { 'left', 'right', 'up', 'down', 'return' }
 }
 players[2] = {
     color = { 0, 1, 0 },
-    pos = { 130, 80 },
+    pos = {  30, 80 },
+    sink = { 30,  4 },
     dPos = { 0, 0 },
-    bindings = { 'a', 'd', 'w', 's' }
+    captured = 0,
+    bindings = { 'a', 'd', 'w', 's', 'space' }
 }
 
 local oilCells = {}
@@ -57,7 +62,10 @@ function World:new(o)
   end
 
   for pIdx = 1, #players do
-    flood.carvePlayer(players[pIdx].pos, gc.materials.player[pIdx], o.m)
+    local pl = players[pIdx]
+    local sink = pl.sink
+    flood.carveHole(pl.pos, gc.materials.player[pIdx], o.m)
+    o.m[sink[1]][sink[2]] = gc.materials.sink[pIdx]
   end
   
   updateNextBleedT(o.m)
@@ -85,12 +93,12 @@ function World:update(dt)
                 player.pos[1] = player.pos[1] + player.dPos[1]
                 player.pos[2] = player.pos[2] + player.dPos[2]
 
-                local ok, isValid = pcall(flood.isPlayerPosValid, player, pIdx, self.m)
+                local ok, isValid = pcall(flood.isHoleValid, player.pos, gc.materials.player[pIdx], self.m)
                 if not ok or (ok and not isValid) then
                     player.pos = oldPos
                 else
-                    flood.carvePlayer(oldPos,     gc.materials.earth,        self.m)
-                    flood.carvePlayer(player.pos, gc.materials.player[pIdx], self.m)
+                    flood.carveHole(oldPos,     gc.materials.earth,        self.m)
+                    flood.carveHole(player.pos, gc.materials.player[pIdx], self.m)
                 end
             end
         end
@@ -100,6 +108,32 @@ function World:update(dt)
         isDirty = true
         flood.bleed(self.m, oilCells)
         updateNextBleedT(self.m)
+
+        for pIdx = 1, #players do
+          local pl = players[pIdx]
+          local sink = pl.sink
+          if self.m[sink[1]][sink[2]] == gc.materials.oil then
+            self.m[sink[1]][sink[2]] = gc.materials.sink[pIdx]
+            
+            -- remove from oil cells so it can be filled again
+            local iToRemove
+            for i, v in ipairs(oilCells) do
+              if v[1] == sink[1] and v[2] == sink[2] then
+                iToRemove = i
+                break
+              end
+            end
+            table.remove(oilCells, iToRemove)
+
+            pl.captured = pl.captured + 1
+            print('player ' .. pIdx .. ' captured ' .. pl.captured .. ' oil')
+
+            if pl.captured >= winCapture then
+              print('player ' .. pIdx .. ' won!')
+              love.event.quit()
+            end
+          end
+        end
     end
 
     if isDirty then
@@ -132,6 +166,9 @@ function World:redraw()
             color = players[1].color
           elseif v == gc.materials.player[2] then
             color = players[2].color
+          elseif v == gc.materials.sink[1] or v == gc.materials.sink[2] then
+            color = { 0.3, 0.3, 0.3 }
+            -- color = gc.colors.sky
           end
 
           local X = (x-1) * S
@@ -155,21 +192,40 @@ function World:onKey(key)
         return
     end
 
+    local isDirty = false
     for pIdx = 1, #players do
         local player = players[pIdx]
+        
         for i, k in ipairs(player.bindings) do
             if key == k then
-                player.dPos = gc.pChanges[i]
+                if i == 5 then
+                  local hPos = {
+                    player.pos[1] + 2*player.dPosOld[1],
+                    player.pos[2] + 2*player.dPosOld[2]
+                  }
+                  local ok, isValid = pcall(flood.isHoleValid, hPos, 0, self.m)
+                  if ok and isValid then
+                      isDirty = true
+                      flood.carveHole(hPos, gc.materials.dirt, self.m)
+                  end
+                else
+                  player.dPos = gc.pChanges[i]
+                end
             end
         end
+    end
+
+    if isDirty then
+      self:redraw()
     end
 end
 
 function World:onKeyUp(key)
     for pIdx = 1, #players do
         local player = players[pIdx]
-        for i, k in ipairs(player.bindings) do
-            if key == k then
+        for _, k in ipairs(player.bindings) do
+            if key == k and (player.dPos[1] ~= 0 or player.dPos[2] ~= 0) then
+                player.dPosOld = player.dPos
                 player.dPos = { 0, 0 }
             end
         end
