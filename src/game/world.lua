@@ -11,24 +11,30 @@ local World = {x=0, y=0, width=consts.W, height=consts.H}
 
 local S = 6
 
+local t = 0
+local nextPlayerMoveDt = 0.1
+local nextPlayerMoveT = nextPlayerMoveDt
+local nextBleedDt = 0.075
+local nextBleedT
+
 local players = {}
 players[1] = {
     color = { 1, 0, 0 },
-    pos = { 80, 80 },
+    pos = { 30, 80 },
+    dPos = { 0, 0 },
     bindings = { 'left', 'right', 'up', 'down' }
 }
 players[2] = {
     color = { 0, 1, 0 },
-    pos = { 20, 80 },
+    pos = { 130, 80 },
+    dPos = { 0, 0 },
     bindings = { 'a', 'd', 'w', 's' }
 }
 
 local oilCells = {}
-table.insert(oilCells, {50, 80})
+table.insert(oilCells, {80, 80})
 
-local t = 0
-local nextBleedDt = 0.1
-local nextBleedT
+
 
 local updateNextBleedT = function(m)
     nextBleedT = nextBleedDt * #flood.frontier(m, oilCells) + t
@@ -41,8 +47,9 @@ function World:new(o)
 
   o.m = utils.matrixCreate(160, 120, gc.materials.dirt)
   for x = 1, #o.m do
-    o.m[x][1] = gc.materials.sky
-    o.m[x][2] = gc.materials.sky
+    for y = 1, 4 do
+        o.m[x][y] = gc.materials.sky
+    end
   end
 
   for _, c in ipairs(oilCells) do
@@ -62,11 +69,41 @@ end
 
 function World:update(dt)
     t = t + dt
+
+    local isDirty = false
+
+    if t >= nextPlayerMoveT then
+        nextPlayerMoveT = t + nextPlayerMoveDt
+        for pIdx = 1, #players do
+            local player = players[pIdx]
+
+            if player.dPos[1] ~= 0 or player.dPos[2] ~= 0 then
+                isDirty = true
+
+                local oldPos = { player.pos[1], player.pos[2] }
+
+                player.pos[1] = player.pos[1] + player.dPos[1]
+                player.pos[2] = player.pos[2] + player.dPos[2]
+
+                local ok, isValid = pcall(flood.isPlayerPosValid, player, pIdx, self.m)
+                if not ok or (ok and not isValid) then
+                    player.pos = oldPos
+                else
+                    flood.carvePlayer(oldPos,     gc.materials.earth,        self.m)
+                    flood.carvePlayer(player.pos, gc.materials.player[pIdx], self.m)
+                end
+            end
+        end
+    end
+
     if t >= nextBleedT then
+        isDirty = true
         flood.bleed(self.m, oilCells)
-        self:redraw()
-        -- nextBleedT = t + nextBleedDt
         updateNextBleedT(self.m)
+    end
+
+    if isDirty then
+        self:redraw()
     end
 end
 
@@ -120,30 +157,23 @@ function World:onKey(key)
 
     for pIdx = 1, #players do
         local player = players[pIdx]
-        local dPos = {0, 0}
         for i, k in ipairs(player.bindings) do
             if key == k then
-                dPos = gc.pChanges[i]
-            end
-        end
-
-        if dPos[1] ~= 0 or dPos[2] ~= 0 then
-            local oldPos = { player.pos[1], player.pos[2] }
-
-            player.pos[1] = player.pos[1] + dPos[1]
-            player.pos[2] = player.pos[2] + dPos[2]
-
-            local ok, isValid = pcall(flood.isPlayerPosValid, player, pIdx, self.m)
-            if not ok or (ok and not isValid) then
-                player.pos = oldPos
-            else
-                flood.carvePlayer(oldPos,     gc.materials.earth,        self.m)
-                flood.carvePlayer(player.pos, gc.materials.player[pIdx], self.m)
+                player.dPos = gc.pChanges[i]
             end
         end
     end
+end
 
-    self:redraw()
+function World:onKeyUp(key)
+    for pIdx = 1, #players do
+        local player = players[pIdx]
+        for i, k in ipairs(player.bindings) do
+            if key == k then
+                player.dPos = { 0, 0 }
+            end
+        end
+    end
 end
 
 return World

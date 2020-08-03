@@ -13,7 +13,7 @@ function love.load(arg)
 
   -- settings.load()
 
-  love.keyboard.setKeyRepeat(true)
+  -- love.keyboard.setKeyRepeat(true)
 
   -- image resolution fix
   consts.devMode = true

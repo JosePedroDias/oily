@@ -24,4 +24,8 @@ M.onKey = function(key)
   M.w:onKey(key)
 end
 
+M.onKeyUp = function(key)
+  M.w:onKeyUp(key)
+end
+
 return M
