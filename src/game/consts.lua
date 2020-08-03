@@ -1,19 +1,5 @@
 local M = {}
 
-M.pColors = {
-    { 1, 0, 0 },
-    { 0, 1, 0 },
-}
-
-M.pBindings = {
-    {
-        'left', 'right', 'up', 'down'
-    },
-    {
-        'a', 'd', 'w', 's'
-    }
-}
-
 M.pChanges = {
     { -1, 0 }, { 1, 0 }, { 0, -1 },  { 0, 1 }
 }
@@ -29,7 +15,8 @@ M.materials = {
     earth = 1,
     dirt = 2,
     sky = 3,
-    oil = 4
+    oil = 4,
+    player = { 5, 6 }
 }
 
 return M

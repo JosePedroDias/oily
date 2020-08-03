@@ -11,37 +11,27 @@ local World = {x=0, y=0, width=consts.W, height=consts.H}
 
 local S = 6
 
--- players
-local pPos = {80, 80}
-
-local oily = {20, 80}
+local players = {}
+players[1] = {
+    color = { 1, 0, 0 },
+    pos = { 80, 80 },
+    bindings = { 'left', 'right', 'up', 'down' }
+}
+players[2] = {
+    color = { 0, 1, 0 },
+    pos = { 20, 80 },
+    bindings = { 'a', 'd', 'w', 's' }
+}
 
 local oilCells = {}
-table.insert(oilCells, oily)
+table.insert(oilCells, {50, 80})
 
 local t = 0
-local nextBleedDt = 0.2
-local nextBleedT -- = t + nextBleedDt
--- local bleedCells = 1
+local nextBleedDt = 0.1
+local nextBleedT
 
 local updateNextBleedT = function(m)
     nextBleedT = nextBleedDt * #flood.frontier(m, oilCells) + t
-end
-
-
-local function posCanBePlayer(pPos, m)
-    local v = m[pPos[1]][pPos[2]]
-    return v == gc.materials.earth or v == gc.materials.dirt
-end
-
-local function isPlayerPosValid(pPos, m)
-    local x = pPos[1]
-    local y = pPos[2]
-    if not posCanBePlayer(pPos, m) then return false end
-    if not posCanBePlayer({x+1, y}, m) then return false end
-    if not posCanBePlayer({x, y+1}, m) then return false end
-    if not posCanBePlayer({x+1, y+1}, m) then return false end
-    return true
 end
 
 function World:new(o)
@@ -55,10 +45,14 @@ function World:new(o)
     o.m[x][2] = gc.materials.sky
   end
 
-  o.m[oily[1]][oily[2]] = gc.materials.oil
+  for _, c in ipairs(oilCells) do
+    o.m[c[1]][c[2]] = gc.materials.oil
+  end
 
-  flood.carvePlayer(pPos, o.m)
-
+  for pIdx = 1, #players do
+    flood.carvePlayer(players[pIdx].pos, gc.materials.player[pIdx], o.m)
+  end
+  
   updateNextBleedT(o.m)
 
   o.canvas = G.newCanvas(o.width, o.height)
@@ -85,7 +79,6 @@ function World:redraw()
     local w = #self.m
     local h = #self.m[1]
 
-    -- draw cells
     for x = 1, w do
         for y = 1, h do
           local v = self.m[x][y]
@@ -96,8 +89,12 @@ function World:redraw()
             color = gc.colors.dirt
           elseif v == gc.materials.oil then
             color = gc.colors.oil
-        elseif v == gc.materials.sky then
+          elseif v == gc.materials.sky then
             color = gc.colors.sky
+          elseif v == gc.materials.player[1] then
+            color = players[1].color
+          elseif v == gc.materials.player[2] then
+            color = players[2].color
           end
 
           local X = (x-1) * S
@@ -106,13 +103,6 @@ function World:redraw()
           G.rectangle("fill", X, Y, S, S)
         end
       end
-
-      -- draw player
-      local X = (pPos[1]-1) * S
-      local Y = (pPos[2]-1) * S
-        pcall(G.setColor, gc.pColors[1]) -- TODO
-        G.rectangle("fill", X, Y, S*2, S*2)
-    
 
     G.setCanvas()
 end
@@ -123,35 +113,35 @@ function World:draw()
 end
 
 function World:onKey(key)
-    local pPosOld = { pPos[1], pPos[2] }
-
-    if key == 'left' then
-        pPos[1] = pPos[1] - 1
-    elseif key == 'right' then
-        pPos[1] = pPos[1] + 1
-    elseif key == 'up' then
-        pPos[2] = pPos[2] - 1
-    elseif key == 'down' then
-        pPos[2] = pPos[2] + 1
-    elseif key == 'space' then
-        flood.bleed(self.m, oilCells)
-    elseif key == 'escape' then
+    if key == 'escape' then
         love.event.quit()
         return
-    else
-        print(key)
     end
 
-    local ok, isValid = pcall(isPlayerPosValid, pPos, self.m)
-    if not ok or (ok and not isValid) then
-        pPos = pPosOld
+    for pIdx = 1, #players do
+        local player = players[pIdx]
+        local dPos = {0, 0}
+        for i, k in ipairs(player.bindings) do
+            if key == k then
+                dPos = gc.pChanges[i]
+            end
+        end
+
+        if dPos[1] ~= 0 or dPos[2] ~= 0 then
+            local oldPos = { player.pos[1], player.pos[2] }
+
+            player.pos[1] = player.pos[1] + dPos[1]
+            player.pos[2] = player.pos[2] + dPos[2]
+
+            local ok, isValid = pcall(flood.isPlayerPosValid, player, pIdx, self.m)
+            if not ok or (ok and not isValid) then
+                player.pos = oldPos
+            else
+                flood.carvePlayer(oldPos,     gc.materials.earth,        self.m)
+                flood.carvePlayer(player.pos, gc.materials.player[pIdx], self.m)
+            end
+        end
     end
-
-    --if not isPlayerPosValid(pPos, self.m) then
-    --    pPos = pPosOld
-    --end
-
-    flood.carvePlayer(pPos, self.m)
 
     self:redraw()
 end
