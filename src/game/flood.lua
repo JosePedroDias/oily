@@ -11,7 +11,7 @@ local function neighbors(pos)
     }
 end
 
-local function frontier(m, cells)
+local function frontier(mm, cells)
     local candidates = {}
     for _, c in ipairs(cells) do
         local neighs = neighbors(c)
@@ -27,7 +27,7 @@ local function frontier(m, cells)
     local res = {}
     for _, c in pairs(candidates) do
         local ok, v = pcall(function()
-            return m[c[1]][c[2]]
+            return mm.g(c[1], c[2])
         end)
         if ok and (v == gc.materials.earth or v == gc.materials.sink[1] or v == gc.materials.sink[2]) then
             table.insert(res, c)
@@ -37,38 +37,37 @@ local function frontier(m, cells)
     return res
 end
 
-local function bleed(m, cells)
-    local newCells = frontier(m, cells)
+local function bleed(mm, cells)
+    local newCells = frontier(mm, cells)
     for _, nc in ipairs(newCells) do
-        m[nc[1]][nc[2]] = gc.materials.oil
+        mm.s(nc[1], nc[2], gc.materials.oil)
         table.insert(cells, nc)
     end
 end
 
-local function posCanBeFilled(pPos, pMat, m)
-    local v = m[pPos[1]][pPos[2]]
+local function posCanBeFilled(pPos, pMat, mm)
+    local v = mm.g(pPos[1], pPos[2])
     return v == gc.materials.earth or v == gc.materials.dirt or v == pMat
 end
 
-local function isHoleValid(pos, mat, m)
+local function isHoleValid(pos, mat, mm)
     local x = pos[1]
     local y = pos[2]
-    if not posCanBeFilled(pos,        mat, m) then return false end
-    if not posCanBeFilled({x+1, y},   mat, m) then return false end
-    if not posCanBeFilled({x,   y+1}, mat, m) then return false end
-    if not posCanBeFilled({x+1, y+1}, mat, m) then return false end
+    if not posCanBeFilled(pos,        mat, mm) then return false end
+    if not posCanBeFilled({x+1, y},   mat, mm) then return false end
+    if not posCanBeFilled({x,   y+1}, mat, mm) then return false end
+    if not posCanBeFilled({x+1, y+1}, mat, mm) then return false end
     return true
 end
 
-local function carveHole(pPos, mat, m)
+local function carveHole(pPos, mat, mm)
     local x = pPos[1]
     local y = pPos[2]
-    m[x  ][y  ] = mat
-    m[x+1][y  ] = mat
-    m[x  ][y+1] = mat
-    m[x+1][y+1] = mat
+    mm.s(x,   y,   mat)
+    mm.s(x+1, y,   mat)
+    mm.s(x,   y+1, mat)
+    mm.s(x+1, y+1, mat)
 end
-
 
 M.bleed = bleed
 M.carveHole = carveHole
