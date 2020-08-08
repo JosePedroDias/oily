@@ -8,14 +8,21 @@ local srv = {}
 
 ----
 
+local cx = math.ceil(gc.W / 2)
+local dx = 70
+local skyY = 10
 local initialPositions = {
-    {  30, 80 },
-    { 130, 80 }
+    { cx-dx, 80 },
+    { cx+dx, 80 }
 }
 
 local initialSinks = {
-    {  30, 4 },
-    { 130, 4 }
+    { cx-dx, skyY },
+    { cx+dx, skyY }
+}
+
+local initialOilCells = {
+    { cx, 80 }
 }
 
 local players
@@ -77,12 +84,14 @@ local function newGame()
     end
 
     oilCells = {}
-    table.insert(oilCells, {80, 80})
+    for _, oc in ipairs(initialOilCells) do
+        table.insert(oilCells, oc)
+    end
 
-    m = utils.matrixCreate(160, 120, gc.materials.dirt)
+    m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
 
     for x = 1, #m do
-        for y = 1, 4 do
+        for y = 1, skyY do
             mm.s(x, y, gc.materials.sky)
         end
     end
@@ -253,7 +262,6 @@ generateServer({
         if key == 'space' then
             player.digging = not player.digging
             srv.broadcast('di ' .. pIdx .. ',' .. (player.digging and 'Y' or 'N') )
-            print('digging: ' .. (player.digging and 'Y' or 'N'))
         elseif key == 'left' then
             player.dPos[1] = -1
         elseif key == 'right' then

@@ -17,7 +17,7 @@ local G = love.graphics
 
 local World = {x=0, y=0, width=consts.W, height=consts.H}
 
-local S = 7 -- cell size in pixels
+local S = 6 -- cell size in pixels
 local t = 0
 local connected = false
 local winnerIdx
@@ -54,7 +54,7 @@ function World:reset()
       color = { 0, 1, 0 },
   }
   
-  self.m = utils.matrixCreate(160, 120, gc.materials.dirt)
+  self.m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
   self:updateLabel()
   self:updateLabelPlayer(1)
   self:updateLabelPlayer(2)

@@ -1,5 +1,8 @@
 local M = {}
 
+M.W = 167 -- (screenW/S)
+M.H = 125
+
 M.colors = {
     sky = {0.5, 0.9, 0.9},
     earth = {0.6, 0.3, 0},
