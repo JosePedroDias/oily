@@ -23,12 +23,15 @@ _Controls_:
 
 ## TODO 🧑‍🍳
 
-- draw capturing towers
-- draw pretty players
+- debug server stability issues
+- use textures instead of solid colors for materials
+- add a sky texture
+- zoom camera according to action
 - remove space btw cmd and args in netcode
 - have a couple more base maps (placement of sinks and players)
 - title screen
 - generate noise rocks procedurally
+- generate earth gaps too
 - detect game over (deadlocks...)
 - support multiple games in the same server?
 

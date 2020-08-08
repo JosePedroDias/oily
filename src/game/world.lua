@@ -207,6 +207,7 @@ function World:redraw()
           elseif v == gc.materials.sink[1] or v == gc.materials.sink[2] then
             -- color = { 0.3, 0.3, 0.3 }
             color = gc.colors.sky
+            isTower = true
           end
 
           local X = (x-1) * S
@@ -214,12 +215,12 @@ function World:redraw()
 
           if isPlayer then
             local pIdx = v - gc.materials.player[1] + 1
-            pPos[pIdx] = { X - S/2, Y - S/2 }
+            pPos[pIdx] = { X, Y }
           elseif isTower then
             local pIdx = v - gc.materials.sink[1] + 1
             table.insert(tPos, {
               pIdx,
-              { X + S/2, Y + S/2 }
+              { X + S/2, Y + S/2 - 10 }
             })
           end
 
@@ -228,7 +229,7 @@ function World:redraw()
         end
       end
 
-      G.setColor(1, 1, 1)--, 0.8)
+      G.setColor(1, 1, 1)
       
       local SP = 0.15
       for pIdx = 1, 2 do
@@ -260,8 +261,7 @@ function World:redraw()
             rot = 45
           end
 
-          -- print(dir[1] .. ',' .. dir[2] .. ' rot:' .. rot .. ' MX:' .. MX)
-          G.draw(gPlayers[1], p[1], p[2], D2R * rot, SP*MX, SP, 136/2, 136/2)
+          G.draw(gPlayers[pIdx], p[1], p[2], D2R * rot, SP*MX, SP, 136/2, 136/2)
         end
       end
 
