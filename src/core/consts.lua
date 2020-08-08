@@ -7,7 +7,7 @@ M.H = 750
 M.x0 = 0
 M.y0 = 0
 
-M.version = "0.0.2" -- used for network, config compatibility and itch.io published deliverables
+M.version = "0.0.4" -- used for network, config compatibility and itch.io published deliverables
 M.gitHash = "__GITHASH__"
 M.gitDate = "__GITDATE__"
 
