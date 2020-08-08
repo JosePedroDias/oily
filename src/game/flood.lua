@@ -43,6 +43,7 @@ local function bleed(mm, cells)
         mm.s(nc[1], nc[2], gc.materials.oil)
         table.insert(cells, nc)
     end
+    return #newCells
 end
 
 local function getHole(pos)

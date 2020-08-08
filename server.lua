@@ -31,7 +31,8 @@ local clientIdToPlayerIdx
 
 local nextPlayerMoveDt = 0.05
 local nextPlayerMoveT = nextPlayerMoveDt
-local nextBleedDt = 0.025
+local nextBleedDt = 0.2
+local bleedSpeedFactor = 0.98
 local nextBleedT
 local winCapture = 300
 local gameGoingOn
@@ -60,8 +61,15 @@ local mm = {
 
 local T = 0
 
-local updateNextBleedT = function()
-    nextBleedT = nextBleedDt * #flood.frontier(mm, oilCells) + T
+local updateNextBleedT = function(bleedCount)
+    if bleedCount > 0 then
+        nextBleedDt = math.max(nextBleedDt * bleedSpeedFactor, 0.01)
+    end
+
+    local n = math.max(#flood.frontier(mm, oilCells), 1)
+    nextBleedT = T + (nextBleedDt * n)
+
+    -- print('nextBleedT:' .. nextBleedT .. ' speed:' .. nextBleedDt .. ' bleedCount:' ..bleedCount)
 end
 
 local function newGame()
@@ -113,7 +121,7 @@ local function newGame()
         mm.s(sink[1], sink[2], gc.materials.sink[pIdx])
     end
 
-    updateNextBleedT()
+    updateNextBleedT(0)
 end
 
 local function update(t)
@@ -179,8 +187,8 @@ local function update(t)
     end
 
     if t >= nextBleedT then
-        flood.bleed(mm, oilCells)
-        updateNextBleedT()
+        local bleedCount = flood.bleed(mm, oilCells)
+        updateNextBleedT(bleedCount)
 
         for pIdx = 1, #players do
           local pl = players[pIdx]
