@@ -125,10 +125,24 @@ M.splitLines = function(st)
   return M.split(st, "\n")
 end
 
+M.tableShallowClone = function(tbl)
+  local tbl2 = {}
+  local k, v = next(tbl)
+  while k do
+    tbl2[k] = v
+    k, v = next(tbl, k)
+  end
+  return tbl2
+end
+
 M.tableLength = function(tbl)
-  local len = 0
-  for _, _ in pairs(tbl) do len = len + 1 end
-  return len
+  local n = 0
+  local k = next(tbl)
+  while k do
+    n = n + 1
+    k = next(tbl, k)
+  end
+  return n
 end
 
 M.has = function(tbl, item)

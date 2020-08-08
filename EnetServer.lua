@@ -50,6 +50,19 @@ local function generateServer(opts)
     return clients
   end
 
+  local function getNumClients()
+    local clients = getClients()
+
+    local n = 0
+    local i = next(clients)
+    while i do
+      n = n + 1
+      i = next(clients, i)
+    end
+
+    return n
+  end
+
   local function send(data, clientId)
     local clients = getClients()
     local peer = host:get_peer(clients[clientId])
@@ -65,11 +78,17 @@ local function generateServer(opts)
     running = false
   end
 
+  local function setTime(t_)
+    t = t_
+  end
+
   signal.signal(signal.SIGINT, stopRunning)
 
   opts.api.broadcast = broadcast
   opts.api.getClients = getClients
+  opts.api.getNumClients = getNumClients
   opts.api.send = send
+  opts.api.setTime = setTime
   opts.api.stopRunning = stopRunning
 
   while running do
@@ -106,6 +125,12 @@ local function generateServer(opts)
         end
       end
     end
+  end
+
+  local clients = getClients()
+  for _, peerIdx in pairs(clients) do
+    local peer = host:get_peer(peerIdx)
+    peer:disconnect_now()
   end
 end
 

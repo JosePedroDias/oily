@@ -8,25 +8,23 @@ local srv = {}
 
 ----
 
-local players = {}
-players[1] = {
-    pos =  { 130, 80 },
-    sink = { 130,  4 },
-    dPos = { 0, 0 },
-    captured = 0
-}
-players[2] = {
-    pos = {  30, 80 },
-    sink = { 30,  4 },
-    dPos = { 0, 0 },
-    captured = 0
+local initialPositions = {
+    {  30, 80 },
+    { 130, 80 }
 }
 
-local clientIdToPlayerIdx = {}
+local initialSinks = {
+    {  30, 4 },
+    { 130, 4 }
+}
+
+local players
+
+local clientIdToPlayerIdx
 
 local nextPlayerMoveDt = 0.05
 local nextPlayerMoveT = nextPlayerMoveDt
-local nextBleedDt = 0.1
+local nextBleedDt = 0.025
 local nextBleedT
 local winCapture = 300
 
@@ -50,6 +48,24 @@ local updateNextBleedT = function()
 end
 
 local function newGame()
+    print('new game!')
+
+    srv.setTime(0)
+
+    players = {}
+
+    local numClients = srv.getNumClients()
+
+    for pIdx = 1, numClients do
+        local pl = {
+            pos = utils.tableShallowClone( initialPositions[pIdx] ),
+            sink = utils.tableShallowClone( initialSinks[pIdx] ),
+            dPos = { 0, 0 },
+            captured = 0
+        }
+        table.insert(players, pl)
+    end
+
     oilCells = {}
     table.insert(oilCells, {80, 80})
 
@@ -122,7 +138,7 @@ local function update(t)
 
             pl.captured = pl.captured + 1
             --print('player ' .. pIdx .. ' captured ' .. pl.captured .. ' oil')
-            srv.broadcast('ca ' .. pIdx ',' .. pl.captured)
+            srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
 
             if pl.captured >= winCapture then
               --print('player ' .. pIdx .. ' won!')
@@ -136,28 +152,46 @@ end
 
 ----
 
+local function updateClientIdToPlayerIdx()
+    local clients = srv.getClients()
+    clientIdToPlayerIdx = {}
+    local i = 1
+    for clientId, _ in pairs(clients) do
+        clientIdToPlayerIdx[clientId] = i
+        print(clientId .. ' ~> ' .. i)
+        i = i + 1
+    end
+end
+
 generateServer({
   api = srv,
   port = 52225,
   fps = 60,
-  -- debug = true,
+  --debug = true,
   onUpdate = function(t)
     if nextBleedT then
         update(t)
     end
   end,
   onNewClient = function(clientId, t)
-    table.insert(clientIdToPlayerIdx, clientId)
-    -- print('#clients '.. #clientIdToPlayerIdx)
-    if #clientIdToPlayerIdx == 2 then
+    local numClients = srv.getNumClients()
+    print('#clients '.. numClients)
+    updateClientIdToPlayerIdx()
+    --if numClients == 1 then
         newGame()
-    end
+    --end
+  end,
+  onClientLeft = function(clientId, t)
+    local numClients = srv.getNumClients()
+    print('#clients '.. numClients)
+    updateClientIdToPlayerIdx()
+    newGame()
   end,
   onReceive = function(data, clientId, t)
-    local pIdx = 2 -- TODO 
-    if clientId == clientIdToPlayerIdx[1] then
-        pIdx = 1
-    end
+    print('received [' .. data .. '] from ' .. clientId)
+
+    -- which player sent this?
+    local pIdx = clientIdToPlayerIdx[clientId]
     local player = players[pIdx]
 
     local cmd = data:sub(1, 2)
@@ -193,6 +227,9 @@ generateServer({
     else
         print(data)
     end
+  end,
+  onEnd = function()
+      print('leaving...')
   end
 })
 
