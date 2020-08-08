@@ -18,6 +18,10 @@ The server manages it and sends updates based on player states, oil shape and wh
 
     sr <x>,<y>,<w>,<h>,<v>
 
+(set player direction)
+
+    pd <dx>,<dy>
+
 (captured)
 
     ca <pIdx>,<captured>

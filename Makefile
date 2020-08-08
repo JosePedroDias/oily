@@ -5,7 +5,6 @@ os := $(shell uname)
 codehash := $(shell git rev-parse --verify --short HEAD)
 codedate := $(shell git show -s --format="%cI" HEAD)
 codedate := $(shell git show -s --format="%cI" HEAD)
-# gameversion := $(shell cat src/core/consts.lua|pcregrep -o1 -i 'M.version = "([^"]+)"'|sed 's/\./_/g')
 gameversion := $(shell cat src/core/consts.lua|pcregrep -o1 -i 'M.version = "([^"]+)"')
 
 butler = butler

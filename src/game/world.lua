@@ -1,9 +1,10 @@
 --[[ world ]] --
 
+local enet = require "enet"
 local utils = require "src.core.utils"
 local consts = require "src.core.consts"
 local gc = require "src.game.consts"
-local enet = require "enet"
+local assets = require "src.core.assets"
 local Label = require "src.ui.label"
 
 local HOST = "127.0.0.1"
@@ -14,6 +15,8 @@ local host = enet.host_create()
 host:connect(HOST .. ":" .. PORT)
 
 local G = love.graphics
+
+local D2R = math.pi / 180
 
 local World = {x=0, y=0, width=consts.W, height=consts.H}
 
@@ -26,14 +29,24 @@ local bindings = { 'left', 'right', 'up', 'down', 'space', 'r' }
 
 local players
 
+local gPlayers
+local gTowers
+
 function World:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
 
-  o.l   = Label:new({x=consts.W/2-100, y=0, width=200, background={0,0,0,0.3}})
-  o.lp1 = Label:new({x=0,              y=0, width=300, background={0,0,0,0.3}})
-  o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, background={0,0,0,0.3}})
+  local lColor = {0.1, 0.1, 0.1}
+  -- local lBg = {0,0,0,0.3}
+  local lBg = nil
+
+  gPlayers = { assets.gfx.player1,  assets.gfx.player2 }
+  gTowers = { assets.gfx.tower1,  assets.gfx.tower2 }
+
+  o.l   = Label:new({x=consts.W/2-100, y=0, width=200, color=lColor, background=lBg})
+  o.lp1 = Label:new({x=0,              y=0, width=300, color=lColor, background=lBg})
+  o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, color=lColor, background=lBg})
   
   o.canvas = G.newCanvas(o.width, o.height)
 
@@ -49,9 +62,11 @@ function World:reset()
   players = {}
   players[1] = {
       color = { 1, 0, 0 },
+      dir = { 1, 0 }
   }
   players[2] = {
       color = { 0, 1, 0 },
+      dir = { -1, 0 }
   }
   
   self.m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
@@ -88,6 +103,13 @@ function World:update(dt)
                     self.m[xi][yi] = v
                 end
             end
+          elseif cmd == 'pd' then
+            isDirty = true
+            local pIdx = tonumber(args[1])
+            local dx = tonumber(args[2])
+            local dy = tonumber(args[3])
+            players[pIdx].dir = { dx, dy }
+            self:updateLabelPlayer(pIdx)
             elseif cmd == 'ca' then
               isDirty = true
               local pIdx = tonumber(args[1])
@@ -143,7 +165,9 @@ end
 function World:updateLabelPlayer(idx)
   local pl = players[idx]
   if not pl.captured or not pl.holesLeft or not pl.digging then return end
-  local txt = 'P' .. idx .. ' | digging: ' .. pl.digging .. ' oil:' .. pl.captured .. ' holes:' .. pl.holesLeft
+  local action = 'dig'
+  if pl.digging == 'N' then action = 'place' end
+  local txt = 'P' .. idx .. ' ' ..  action .. ' oil:' .. pl.captured .. ' holes:' .. pl.holesLeft
   self['lp' .. idx]:setValue(txt)
 end
 
@@ -156,13 +180,18 @@ function World:redraw()
 
     pcall(G.clear, {0, 0, 0, 0})
 
-    local w = #self.m
-    local h = #self.m[1]
+    local w = gc.W
+    local h = gc.H
+
+    local pPos = { false, false }
+    local tPos = {}
 
     for x = 1, w do
         for y = 1, h do
           local v = self.m[x][y]
           local color
+          local isPlayer = false
+          local isTower = false
           if v == gc.materials.earth then
             color = gc.colors.earth
           elseif v == gc.materials.dirt then
@@ -171,20 +200,76 @@ function World:redraw()
             color = gc.colors.oil
           elseif v == gc.materials.sky then
             color = gc.colors.sky
-          elseif v == gc.materials.player[1] then
-            color = players[1].color
-          elseif v == gc.materials.player[2] then
-            color = players[2].color
+          elseif v == gc.materials.player[1] or v == gc.materials.player[2] then
+            local pIdx = v - gc.materials.player[1] + 1
+            color  = (players[pIdx].digging == 'Y') and gc.colors.earth or gc.colors.dirt
+            isPlayer = true
           elseif v == gc.materials.sink[1] or v == gc.materials.sink[2] then
-            color = { 0.3, 0.3, 0.3 }
-            -- color = gc.colors.sky
+            -- color = { 0.3, 0.3, 0.3 }
+            color = gc.colors.sky
           end
 
           local X = (x-1) * S
           local Y = (y-1) * S
+
+          if isPlayer then
+            local pIdx = v - gc.materials.player[1] + 1
+            pPos[pIdx] = { X - S/2, Y - S/2 }
+          elseif isTower then
+            local pIdx = v - gc.materials.sink[1] + 1
+            table.insert(tPos, {
+              pIdx,
+              { X + S/2, Y + S/2 }
+            })
+          end
+
           pcall(G.setColor, color)
           G.rectangle("fill", X, Y, S, S)
         end
+      end
+
+      G.setColor(1, 1, 1)--, 0.8)
+      
+      local SP = 0.15
+      for pIdx = 1, 2 do
+        local p = pPos[pIdx]
+        if p then
+          local dir = players[pIdx].dir
+          local MX = 1
+          local rot = 0
+          
+          if dir[1] == 1 then
+            MX = -1
+          end
+
+          if dir[1] == -1 and dir[2] == 0 then
+            rot = 0
+          elseif dir[1] == -1 and dir[2] == 1 then
+            rot = -45
+          elseif dir[1] == -1 and dir[2] == -1 then
+            rot = 45
+          elseif dir[2] == -1 and dir[1] == 0 then
+            rot = 90
+          elseif dir[2] == 1 and dir[1] == 0 then
+            rot = -90
+          elseif dir[2] == -1 and dir[1] == 1 then
+            rot = -45
+          elseif dir[2] == -1 and dir[1] == -1 then
+            rot = 45
+          elseif dir[2] == 1 and dir[1] == 1 then
+            rot = 45
+          end
+
+          -- print(dir[1] .. ',' .. dir[2] .. ' rot:' .. rot .. ' MX:' .. MX)
+          G.draw(gPlayers[1], p[1], p[2], D2R * rot, SP*MX, SP, 136/2, 136/2)
+        end
+      end
+
+      local TP = 0.2
+      for _, pair in ipairs(tPos) do
+        local pIdx = pair[1]
+        local p = pair[2]
+        G.draw(gTowers[pIdx], p[1], p[2], 0, TP, TP, 96/2, 158/2)
       end
 
     G.setCanvas()

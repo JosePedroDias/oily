@@ -264,6 +264,8 @@ generateServer({
     local cmd = data:sub(1, 2)
     local key = data:sub(4)
 
+    local prevDPos = { player.dPos[1], player.dPos[2] }
+
     if cmd == 'kd' then
         if key == 'space' then
             player.digging = not player.digging
@@ -289,6 +291,12 @@ generateServer({
         end
     else
         print(data)
+    end
+
+    if player.dPos[1] ~= prevDPos[1] or player.dPos[2] ~= prevDPos[2] then
+        if player.dPos[1] ~= 0 or player.dPos[2] ~= 0 then
+            srv.broadcast('pd '.. pIdx ..',' .. player.dPos[1] .. ',' .. player.dPos[2])
+        end
     end
   end,
   onEnd = function()

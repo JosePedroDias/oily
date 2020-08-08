@@ -25,6 +25,7 @@ _Controls_:
 
 - draw capturing towers
 - draw pretty players
+- remove space btw cmd and args in netcode
 - have a couple more base maps (placement of sinks and players)
 - title screen
 - generate noise rocks procedurally
