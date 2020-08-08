@@ -44,8 +44,17 @@ local mm = {
         m[x][y] = v
         srv.broadcast('sm ' .. x .. ',' .. y .. ',' .. v)
     end,
+    srect = function(x, y, w, h, v)
+        for xi = x, w - x + 1 do
+            for yi = y, h - y + 1 do
+                m[xi][yi] = v
+            end
+        end
+        srv.broadcast('sr ' .. x .. ',' .. y .. ',' .. w .. ',' .. h .. ',' .. v)
+    end,
     g = function (x, y)
-        return m[x][y]
+        local col = m[x]
+        return col and col[y]
     end
 }
 
@@ -90,11 +99,7 @@ local function newGame()
 
     m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
 
-    for x = 1, #m do
-        for y = 1, skyY do
-            mm.s(x, y, gc.materials.sky)
-        end
-    end
+    mm.srect(1, 1, gc.W, skyY, gc.materials.sky)
 
     for _, c in ipairs(oilCells) do
         mm.s(c[1], c[2], gc.materials.oil)

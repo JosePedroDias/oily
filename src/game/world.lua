@@ -6,8 +6,8 @@ local gc = require "src.game.consts"
 local enet = require "enet"
 local Label = require "src.ui.label"
 
--- local HOST = "127.0.0.1"
-local HOST = 'nc.xsl.pt'
+local HOST = "127.0.0.1"
+-- local HOST = 'nc.xsl.pt'
 local PORT = 52225
 
 local host = enet.host_create()
@@ -76,6 +76,18 @@ function World:update(dt)
             if cmd == 'sm' then
                 isDirty = true
                 self.m[tonumber(args[1])][tonumber(args[2])] = tonumber(args[3])
+            elseif cmd == 'sr' then
+              isDirty = true
+              local x = tonumber(args[1])
+              local y = tonumber(args[2])
+              local w = tonumber(args[3])
+              local h = tonumber(args[4])
+              local v = tonumber(args[5])
+              for xi = x, w - x + 1 do
+                for yi = y, h - y + 1 do
+                    self.m[xi][yi] = v
+                end
+            end
             elseif cmd == 'ca' then
               isDirty = true
               local pIdx = tonumber(args[1])

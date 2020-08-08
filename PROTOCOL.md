@@ -14,6 +14,10 @@ The server manages it and sends updates based on player states, oil shape and wh
 
     sm <x>,<y>,<v>
 
+(set matrix rect)
+
+    sr <x>,<y>,<w>,<h>,<v>
+
 (captured)
 
     ca <pIdx>,<captured>
