@@ -30,7 +30,7 @@ local function generateServer(opts)
     assert(type(opts.onEnd) == "function", "onEnd should be a function")
   end
 
-  local host = enet.host_create("localhost:" .. opts.port)
+  local host = enet.host_create("*:" .. opts.port)
 
   local running = true
   local dt = 1 / opts.fps
