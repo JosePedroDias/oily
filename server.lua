@@ -49,6 +49,7 @@ end
 
 local function newGame()
     print('new game!')
+    srv.broadcast('ng')
 
     srv.setTime(0)
 
@@ -61,9 +62,13 @@ local function newGame()
             pos = utils.tableShallowClone( initialPositions[pIdx] ),
             sink = utils.tableShallowClone( initialSinks[pIdx] ),
             dPos = { 0, 0 },
-            captured = 0
+            captured = 0,
+            digging = false,
+            holesLeft = 50
         }
         table.insert(players, pl)
+
+        srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
     end
 
     oilCells = {}
@@ -109,7 +114,11 @@ local function update(t)
                 if not ok or (ok and not isValid) then
                     player.pos = oldPos
                 else
-                    flood.carveHole(oldPos,     gc.materials.earth,        mm)
+                    local leftMat = gc.materials.dirt
+                    if player.digging then
+                        leftMat = gc.materials.earth
+                    end
+                    flood.carveHole(oldPos,     leftMat,                   mm)
                     flood.carveHole(player.pos, gc.materials.player[pIdx], mm)
                 end
             end
@@ -198,15 +207,9 @@ generateServer({
     local key = data:sub(4)
 
     if cmd == 'kd' then
-        if key == 'return' then
-            local hPos = {
-              player.pos[1] + 2*player.dPosOld[1],
-              player.pos[2] + 2*player.dPosOld[2]
-            }
-            local ok, isValid = pcall(flood.isHoleValid, hPos, 0, mm)
-            if ok and isValid then
-                flood.carveHole(hPos, gc.materials.dirt, mm)
-            end
+        if key == 'space' then
+            player.digging = not player.digging
+            print('digging: ' .. (player.digging and 'Y' or 'N'))
         elseif key == 'left' then
             player.dPos[1] = -1
         elseif key == 'right' then

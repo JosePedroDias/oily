@@ -6,6 +6,14 @@ The server manages it and sends updates based on player states, oil shape and wh
 
 # server -> client
 
+(new game)
+
+    ng
+
+(set matrix)
+
+    sm <x>,<y>,<v>
+
 (captured)
 
     ca <pIdx>,<captured>
@@ -13,10 +21,6 @@ The server manages it and sends updates based on player states, oil shape and wh
 (won)
 
     wo <pIdx>
-
-(set matrix)
-
-    sm <x>,<y>,<v>
 
 # client -> server
 

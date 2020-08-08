@@ -21,37 +21,44 @@ local S = 7 -- cell size in pixels
 local t = 0
 local connected = false
 
-local bindings = { 'left', 'right', 'up', 'down', 'return' }
+local bindings = { 'left', 'right', 'up', 'down', 'space' }
 
-local players = {}
-players[1] = {
-    color = { 1, 0, 0 },
-    captured = 0
-}
-players[2] = {
-    color = { 0, 1, 0 },
-    captured = 0
-}
+local players
 
 function World:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
 
-  o.m = utils.matrixCreate(160, 120, gc.materials.dirt)
-
   o.l = Label:new({x=consts.W/2-100, y=0, width=200, background={0,0,0,0.2}})
-  o:updateLabel()
-
   o.lp1 = Label:new({x=0, y=0, width=200, background={0,0,0,0.2}})
   o.lp2 = Label:new({x=consts.W-200, y=0, width=200, background={0,0,0,0.2}})
-  o:updateLabelPlayer(1)
-  o:updateLabelPlayer(2)
   
   o.canvas = G.newCanvas(o.width, o.height)
+
+  --o:reset()
   o:redraw()
 
   return o
+end
+
+function World:reset()
+  print('new game!')
+
+  players = {}
+  players[1] = {
+      color = { 1, 0, 0 },
+      captured = 0
+  }
+  players[2] = {
+      color = { 0, 1, 0 },
+      captured = 0
+  }
+  
+  self.m = utils.matrixCreate(160, 120, gc.materials.dirt)
+  self:updateLabel()
+  self:updateLabelPlayer(1)
+  self:updateLabelPlayer(2)
 end
 
 function World:update(dt)
@@ -74,11 +81,13 @@ function World:update(dt)
               isDirty = true
               local pIdx = tonumber(args[1])
               local capt = tonumber(args[2])
-              print(pIdx)
               players[pIdx].captured = capt
               self:updateLabelPlayer(pIdx)
+            elseif cmd == 'ng' then
+              isDirty = true
+              self:reset()
             else
-                print(data)
+                print('did not process message: [' .. data .. ']')
             end
         elseif event.type == "connect" then
             connected = true
@@ -87,7 +96,7 @@ function World:update(dt)
             connected = false
             self:updateLabel()
         else
-            print(event.type)
+            print('received unprocessed event:' .. event.type)
         end
     end
 
@@ -108,6 +117,10 @@ function World:updateLabelPlayer(idx)
 end
 
 function World:redraw()
+    if not self.m then
+      return
+    end
+
     G.setCanvas(self.canvas)
 
     pcall(G.clear, {0, 0, 0, 0})

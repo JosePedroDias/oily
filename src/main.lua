@@ -17,11 +17,12 @@ function love.load(arg)
 
   -- image resolution fix
   consts.devMode = true
+
   if consts.devMode then
     print("in dev mode")
     -- screen.setSize(1024, 768, consts.W, consts.H, false)
     local W = 1000
-    screen.setSize(W, W, consts.W, consts.H, false)
+    screen.setSize(W, W * 0.75, consts.W, consts.H, false)
   else
     local sW, sH = screen.getCurrentResolution()
     screen.setSize(sW, sH, consts.W, consts.H, true)
