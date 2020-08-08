@@ -7,8 +7,8 @@ local gc = require "src.game.consts"
 local assets = require "src.core.assets"
 local Label = require "src.ui.label"
 
-local HOST = "127.0.0.1"
--- local HOST = 'nc.xsl.pt'
+-- local HOST = "127.0.0.1"
+local HOST = 'nc.xsl.pt'
 local PORT = 52225
 
 local host = enet.host_create()
