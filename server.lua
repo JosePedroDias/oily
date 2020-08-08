@@ -27,6 +27,7 @@ local nextPlayerMoveT = nextPlayerMoveDt
 local nextBleedDt = 0.025
 local nextBleedT
 local winCapture = 300
+local gameGoingOn
 
 local oilCells
 local m
@@ -51,6 +52,8 @@ local function newGame()
     print('new game!')
     srv.broadcast('ng')
 
+    gameGoingOn = true
+
     srv.setTime(0)
 
     players = {}
@@ -64,11 +67,13 @@ local function newGame()
             dPos = { 0, 0 },
             captured = 0,
             digging = false,
-            holesLeft = 50
+            holesLeft = 400
         }
         table.insert(players, pl)
 
         srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
+        srv.broadcast('hl ' .. pIdx .. ',' .. pl.holesLeft)
+        srv.broadcast('di ' .. pIdx .. ',N')
     end
 
     oilCells = {}
@@ -99,6 +104,10 @@ end
 local function update(t)
     T = t
 
+    if not gameGoingOn then
+        return
+    end
+
     if t >= nextPlayerMoveT then
         nextPlayerMoveT = t + nextPlayerMoveDt
         for pIdx = 1, #players do
@@ -118,8 +127,37 @@ local function update(t)
                     if player.digging then
                         leftMat = gc.materials.earth
                     end
-                    flood.carveHole(oldPos,     leftMat,                   mm)
-                    flood.carveHole(player.pos, gc.materials.player[pIdx], mm)
+
+                    local deltaDirt = 0
+                    local aux = gc.ahead[ player.dPos[1] .. ',' .. player.dPos[2] ]
+                    for _, p in ipairs(aux) do
+                        local x = player.pos[1] + p[1]
+                        local y = player.pos[2] + p[2]
+                        local v = mm.g(x, y)
+                        if player.digging and v == gc.materials.dirt then
+                            deltaDirt = deltaDirt - 1
+                        elseif not player.digging and v == gc.materials.earth then
+                            deltaDirt = deltaDirt + 1
+                        end
+                    end
+
+                    local skipCarve = false
+                    local holesLeft = player.holesLeft + deltaDirt
+                    if holesLeft < 0 then
+                        player.pos = oldPos
+                        player.digging = false
+                        srv.broadcast('di ' .. pIdx .. ',N')
+                        skipCarve = true
+                    elseif deltaDirt == 0 then
+                    else
+                        player.holesLeft = holesLeft
+                        srv.broadcast('hl ' .. pIdx .. ',' .. player.holesLeft)
+                    end
+
+                    if not skipCarve then
+                        flood.carveHole(oldPos,     leftMat,                   mm)
+                        flood.carveHole(player.pos, gc.materials.player[pIdx], mm)
+                    end
                 end
             end
         end
@@ -152,6 +190,7 @@ local function update(t)
             if pl.captured >= winCapture then
               --print('player ' .. pIdx .. ' won!')
               srv.broadcast('wo ' .. pIdx)
+              gameGoingOn = false
               --love.event.quit()
             end
           end
@@ -197,7 +236,11 @@ generateServer({
     newGame()
   end,
   onReceive = function(data, clientId, t)
-    print('received [' .. data .. '] from ' .. clientId)
+    if not gameGoingOn then
+        return
+    end
+
+    -- print('received [' .. data .. '] from ' .. clientId)
 
     -- which player sent this?
     local pIdx = clientIdToPlayerIdx[clientId]
@@ -209,6 +252,7 @@ generateServer({
     if cmd == 'kd' then
         if key == 'space' then
             player.digging = not player.digging
+            srv.broadcast('di ' .. pIdx .. ',' .. (player.digging and 'Y' or 'N') )
             print('digging: ' .. (player.digging and 'Y' or 'N'))
         elseif key == 'left' then
             player.dPos[1] = -1

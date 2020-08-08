@@ -45,31 +45,39 @@ local function bleed(mm, cells)
     end
 end
 
+local function getHole(pos)
+    local x = pos[1]
+    local y = pos[2]
+    return {
+        { x,   y,   },
+        { x+1, y,   },
+        { x,   y+1, },
+        { x+1, y+1, },
+    }
+end
+
 local function posCanBeFilled(pPos, pMat, mm)
     local v = mm.g(pPos[1], pPos[2])
     return v == gc.materials.earth or v == gc.materials.dirt or v == pMat
 end
 
 local function isHoleValid(pos, mat, mm)
-    local x = pos[1]
-    local y = pos[2]
-    if not posCanBeFilled(pos,        mat, mm) then return false end
-    if not posCanBeFilled({x+1, y},   mat, mm) then return false end
-    if not posCanBeFilled({x,   y+1}, mat, mm) then return false end
-    if not posCanBeFilled({x+1, y+1}, mat, mm) then return false end
+    local holePs = getHole(pos)
+    for _, p in ipairs(holePs) do
+        if not posCanBeFilled(p, mat, mm) then return false end
+    end
     return true
 end
 
 local function carveHole(pPos, mat, mm)
-    local x = pPos[1]
-    local y = pPos[2]
-    mm.s(x,   y,   mat)
-    mm.s(x+1, y,   mat)
-    mm.s(x,   y+1, mat)
-    mm.s(x+1, y+1, mat)
+    local holePs = getHole(pPos)
+    for _, p in ipairs(holePs) do
+        mm.s(p[1], p[2], mat)
+    end
 end
 
 M.bleed = bleed
+M.getHole = getHole
 M.carveHole = carveHole
 M.isHoleValid = isHoleValid
 M.frontier = frontier

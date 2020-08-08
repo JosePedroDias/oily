@@ -18,6 +18,14 @@ The server manages it and sends updates based on player states, oil shape and wh
 
     ca <pIdx>,<captured>
 
+(holes left)
+
+    hl <pIdx>,<holesLeft>
+
+(digging)
+
+    di <pIdx>,<Y/N>
+
 (won)
 
     wo <pIdx>

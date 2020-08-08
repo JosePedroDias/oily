@@ -20,6 +20,7 @@ local World = {x=0, y=0, width=consts.W, height=consts.H}
 local S = 7 -- cell size in pixels
 local t = 0
 local connected = false
+local winnerIdx
 
 local bindings = { 'left', 'right', 'up', 'down', 'space' }
 
@@ -30,9 +31,9 @@ function World:new(o)
   setmetatable(o, self)
   self.__index = self
 
-  o.l = Label:new({x=consts.W/2-100, y=0, width=200, background={0,0,0,0.2}})
-  o.lp1 = Label:new({x=0, y=0, width=200, background={0,0,0,0.2}})
-  o.lp2 = Label:new({x=consts.W-200, y=0, width=200, background={0,0,0,0.2}})
+  o.l   = Label:new({x=consts.W/2-100, y=0, width=200, background={0,0,0,0.3}})
+  o.lp1 = Label:new({x=0,              y=0, width=300, background={0,0,0,0.3}})
+  o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, background={0,0,0,0.3}})
   
   o.canvas = G.newCanvas(o.width, o.height)
 
@@ -48,11 +49,9 @@ function World:reset()
   players = {}
   players[1] = {
       color = { 1, 0, 0 },
-      captured = 0
   }
   players[2] = {
       color = { 0, 1, 0 },
-      captured = 0
   }
   
   self.m = utils.matrixCreate(160, 120, gc.materials.dirt)
@@ -80,9 +79,23 @@ function World:update(dt)
             elseif cmd == 'ca' then
               isDirty = true
               local pIdx = tonumber(args[1])
-              local capt = tonumber(args[2])
-              players[pIdx].captured = capt
+              players[pIdx].captured = tonumber(args[2])
               self:updateLabelPlayer(pIdx)
+            elseif cmd == 'hl' then
+              isDirty = true
+              local pIdx = tonumber(args[1])
+              players[pIdx].holesLeft = tonumber(args[2])
+              self:updateLabelPlayer(pIdx)
+            elseif cmd == 'di' then
+              isDirty = true
+              local pIdx = tonumber(args[1])
+              players[pIdx].digging = args[2]
+              self:updateLabelPlayer(pIdx)
+            elseif cmd == 'wo' then
+              isDirty = true
+              local pIdx = tonumber(args[1])
+              winnerIdx = pIdx
+              self:updateLabel()
             elseif cmd == 'ng' then
               isDirty = true
               self:reset()
@@ -107,12 +120,18 @@ end
 
 function World:updateLabel()
   local txt = 'connected?' .. (connected and 'Y' or 'N')
+
+  if winnerIdx then
+    txt = 'player #' .. winnerIdx .. ' won!'
+  end
+
   self.l:setValue(txt)
 end
 
 function World:updateLabelPlayer(idx)
   local pl = players[idx]
-  local txt = 'P' .. idx .. ' - captured:' .. pl.captured
+  if not pl.captured or not pl.holesLeft or not pl.digging then return end
+  local txt = 'P' .. idx .. ' | digging: ' .. pl.digging .. ' oil:' .. pl.captured .. ' holes:' .. pl.holesLeft
   self['lp' .. idx]:setValue(txt)
 end
 
