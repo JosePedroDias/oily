@@ -22,7 +22,7 @@ local t = 0
 local connected = false
 local winnerIdx
 
-local bindings = { 'left', 'right', 'up', 'down', 'space' }
+local bindings = { 'left', 'right', 'up', 'down', 'space', 'r' }
 
 local players
 

@@ -70,7 +70,8 @@ local function newGame()
 
     gameGoingOn = true
 
-    srv.setTime(0)
+    T = 0
+    srv.setTime(T)
 
     players = {}
 
@@ -275,6 +276,8 @@ generateServer({
             player.dPos[2] = -1
         elseif key == 'down' then
             player.dPos[2] = 1
+        elseif key == 'r' then
+            newGame()
         end
     elseif cmd == 'ku' then
         if key == 'up' or key == 'down' then

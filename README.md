@@ -25,11 +25,11 @@ _Controls_:
 
 - draw capturing towers
 - draw pretty players
-- generate noise rocks procedurally
 - have a couple more base maps (placement of sinks and players)
 - title screen
-- detect game over
-- support multiple games
+- generate noise rocks procedurally
+- detect game over (deadlocks...)
+- support multiple games in the same server?
 
 ## Credits 😅
 

@@ -32,6 +32,9 @@ local function generateServer(opts)
 
   local host = enet.host_create("*:" .. opts.port)
 
+  -- bytes/sec
+  -- host:bandwidth_limit(incoming, outgoing)
+
   local running = true
   local dt = 1 / opts.fps
   local t = 0
@@ -91,6 +94,11 @@ local function generateServer(opts)
   opts.api.setTime = setTime
   opts.api.stopRunning = stopRunning
 
+  local function logTranferredData()
+    print("sent:" .. host:total_sent_data() .. ", received:" ..
+            host:total_received_data())
+  end
+
   while running do
     if opts.onUpdate then opts.onUpdate(t) end
 
@@ -112,14 +120,18 @@ local function generateServer(opts)
       elseif event.type == "connect" then
         if opts.debug then
           print("server: new client " .. event.peer:connect_id())
+          logTranferredData() -- TODO
         end
+        logTranferredData()
         if opts.onNewClient then
           opts.onNewClient(event.peer:connect_id(), t)
         end
       elseif event.type == "disconnect" then
         if opts.debug then
           print("server: client left" .. event.peer:connect_id())
+          logTranferredData()
         end
+        logTranferredData() -- TODO
         if opts.onClientLeft then
           opts.onClientLeft(event.peer:connect_id(), t)
         end
