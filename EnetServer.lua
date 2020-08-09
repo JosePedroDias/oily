@@ -4,6 +4,12 @@ local socket = require "socket" -- luarocks install luasocket BECAUSE OF SLEEP
 local enet = require "enet" -- luarocks install enet
 local signal = require("posix.signal") -- luarocks install luaposix
 
+local function _print(s)
+  local d = os.date("%H:%M:%S ")
+  -- local d = os.date("%H:%M:%S " .. os.clock() .. " ")
+  print(d .. s)
+end
+
 local function isInt(n)
   return type(n) == "number" and n == math.floor(n)
 end
@@ -69,10 +75,14 @@ local function generateServer(opts)
   local function send(data, clientId)
     local clients = getClients()
     local peer = host:get_peer(clients[clientId])
+    if opts.debug then
+      _print("server: sending [" .. data .. "] to " .. clientId)
+    end
     peer:send(data)
   end
 
   local function broadcast(data)
+    if opts.debug then _print("server: broadcasting [" .. data .. "]") end
     host:broadcast(data)
   end
 
@@ -95,8 +105,8 @@ local function generateServer(opts)
   opts.api.stopRunning = stopRunning
 
   local function logTranferredData()
-    print("sent:" .. host:total_sent_data() .. ", received:" ..
-            host:total_received_data())
+    _print("sent:" .. host:total_sent_data() .. ", received:" ..
+             host:total_received_data())
   end
 
   while running do
@@ -111,15 +121,15 @@ local function generateServer(opts)
       if not event then break end
       if event.type == "receive" then
         if opts.debug then
-          print("server: received [" .. event.data .. "] from " ..
-                  event.peer:connect_id())
+          _print("server: received [" .. event.data .. "] from " ..
+                   event.peer:connect_id())
         end
         if opts.onReceive then
           opts.onReceive(event.data, event.peer:connect_id(), t)
         end
       elseif event.type == "connect" then
         if opts.debug then
-          print("server: new client " .. event.peer:connect_id())
+          _print("server: new client " .. event.peer:connect_id())
           logTranferredData() -- TODO
         end
         logTranferredData()
@@ -128,7 +138,7 @@ local function generateServer(opts)
         end
       elseif event.type == "disconnect" then
         if opts.debug then
-          print("server: client left" .. event.peer:connect_id())
+          _print("server: client left" .. event.peer:connect_id())
           logTranferredData()
         end
         logTranferredData() -- TODO

@@ -4,6 +4,9 @@ local flood = require "src.game.flood"
 local gc = require "src.game.consts"
 local utils = require "src.core.utils"
 
+-- local lovebird = require("lovebird")
+-- lovebird.init()
+
 local srv = {}
 
 ----
@@ -16,9 +19,9 @@ local initialPositions = {
     { cx+dx, 80 }
 }
 
-local initialSinks = {
-    { cx-dx, skyY },
-    { cx+dx, skyY }
+local sinks = {
+    { {cx-dx, skyY} },
+    { {cx+dx, skyY} }
 }
 
 local initialOilCells = {
@@ -42,6 +45,7 @@ local m
 
 local mm = {
     s = function(x, y, v)
+        if m[x][y] == v then return end
         m[x][y] = v
         srv.broadcast('sm ' .. x .. ',' .. y .. ',' .. v)
     end,
@@ -86,9 +90,9 @@ local function newGame()
     local numClients = srv.getNumClients()
 
     for pIdx = 1, numClients do
+        local pos = initialPositions[pIdx]
         local pl = {
-            pos = utils.tableShallowClone( initialPositions[pIdx] ),
-            sink = utils.tableShallowClone( initialSinks[pIdx] ),
+            pos = { pos[1], pos[2] },
             dPos = { 0, 0 },
             captured = 0,
             digging = false,
@@ -98,7 +102,7 @@ local function newGame()
 
         srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
         srv.broadcast('hl ' .. pIdx .. ',' .. pl.holesLeft)
-        srv.broadcast('di ' .. pIdx .. ',N')
+        srv.broadcast('di ' .. pIdx .. ',f')
     end
 
     oilCells = {}
@@ -116,15 +120,31 @@ local function newGame()
 
     for pIdx = 1, #players do
         local pl = players[pIdx]
-        local sink = pl.sink
         flood.carveHole(pl.pos, gc.materials.player[pIdx], mm)
-        mm.s(sink[1], sink[2], gc.materials.sink[pIdx])
     end
+
+    for pIdx = 1, #players do
+        local pl = players[pIdx]
+        flood.carveHole(pl.pos, gc.materials.player[pIdx], mm)
+
+        for _, si in ipairs(sinks[pIdx]) do
+            mm.s(si[1], si[2], gc.materials.sink[pIdx])
+        end
+    end
+
+    --[[ ZZZ = {}
+    ZZZ.players = players
+    print('players #' .. #players)
+    ZZZ.oilCells = oilCells
+    print('oilCells #' .. #oilCells)
+    ZZZ.m = m ]]
 
     updateNextBleedT(0)
 end
 
 local function update(t)
+    -- lovebird.update()
+
     T = t
 
     if not gameGoingOn then
@@ -169,7 +189,7 @@ local function update(t)
                     if holesLeft < 0 then
                         player.pos = oldPos
                         player.digging = false
-                        srv.broadcast('di ' .. pIdx .. ',N')
+                        srv.broadcast('di ' .. pIdx .. ',f')
                         skipCarve = true
                     elseif deltaDirt == 0 then
                     else
@@ -190,32 +210,35 @@ local function update(t)
         local bleedCount = flood.bleed(mm, oilCells)
         updateNextBleedT(bleedCount)
 
+        -- handle sinks
         for pIdx = 1, #players do
           local pl = players[pIdx]
-          local sink = pl.sink
-          if m[sink[1]][sink[2]] == gc.materials.oil then
-            mm.s(sink[1], sink[2], gc.materials.sink[pIdx])
-            
-            -- remove from oil cells so it can be filled again
-            local iToRemove
-            for i, v in ipairs(oilCells) do
-              if v[1] == sink[1] and v[2] == sink[2] then
-                iToRemove = i
-                break
+
+          for _, si in ipairs(sinks[pIdx]) do
+            if m[si[1]][si[2]] == gc.materials.oil then
+                mm.s(si[1], si[2], gc.materials.sink[pIdx])
+                
+                -- remove from oil cells so it can be filled again
+                local iToRemove
+                for i, v in ipairs(oilCells) do
+                  if v[1] == si[1] and v[2] == si[2] then
+                    iToRemove = i
+                    break
+                  end
+                end
+                table.remove(oilCells, iToRemove)
+    
+                pl.captured = pl.captured + 1
+                --print('player ' .. pIdx .. ' captured ' .. pl.captured .. ' oil')
+                srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
+    
+                if pl.captured >= winCapture then
+                  --print('player ' .. pIdx .. ' won!')
+                  srv.broadcast('wo ' .. pIdx)
+                  gameGoingOn = false
+                  --love.event.quit()
+                end
               end
-            end
-            table.remove(oilCells, iToRemove)
-
-            pl.captured = pl.captured + 1
-            --print('player ' .. pIdx .. ' captured ' .. pl.captured .. ' oil')
-            srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
-
-            if pl.captured >= winCapture then
-              --print('player ' .. pIdx .. ' won!')
-              srv.broadcast('wo ' .. pIdx)
-              gameGoingOn = false
-              --love.event.quit()
-            end
           end
         end
     end
@@ -238,7 +261,8 @@ generateServer({
   api = srv,
   port = 52225,
   fps = 60,
-  --debug = true,
+  --fps = 6,
+  debug = true,
   onUpdate = function(t)
     if nextBleedT then
         update(t)
@@ -276,8 +300,16 @@ generateServer({
 
     if cmd == 'kd' then
         if key == 'space' then
-            player.digging = not player.digging
-            srv.broadcast('di ' .. pIdx .. ',' .. (player.digging and 'Y' or 'N') )
+            if player.digging or player.holesLeft >= 4 then
+                player.digging = not player.digging
+                srv.broadcast('di ' .. pIdx .. ',' .. (player.digging and 't' or 'f') )
+                if player.digging then
+                    player.holesLeft = player.holesLeft - 4
+                else
+                    player.holesLeft = player.holesLeft + 4
+                end
+                srv.broadcast('hl '.. pIdx .. ',' .. player.holesLeft)
+            end
         elseif key == 'left' then
             player.dPos[1] = -1
         elseif key == 'right' then

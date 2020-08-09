@@ -23,8 +23,9 @@ _Controls_:
 
 ## TODO 🧑‍🍳
 
+- server saying its version. client aborting if different, requiring upgrade
 - debug server stability issues
-- use textures instead of solid colors for materials
+- use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
 - add a sky texture
 - zoom camera according to action
 - remove space btw cmd and args in netcode

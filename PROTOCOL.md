@@ -32,7 +32,7 @@ The server manages it and sends updates based on player states, oil shape and wh
 
 (digging)
 
-    di <pIdx>,<Y/N>
+    di <pIdx>,<t/f>
 
 (won)
 

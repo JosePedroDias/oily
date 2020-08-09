@@ -12,7 +12,7 @@ local HOST = 'nc.xsl.pt'
 local PORT = 52225
 
 local host = enet.host_create()
-host:connect(HOST .. ":" .. PORT)
+local peer = host:connect(HOST .. ":" .. PORT)
 
 local G = love.graphics
 
@@ -25,7 +25,7 @@ local t = 0
 local connected = false
 local winnerIdx
 
-local bindings = { 'left', 'right', 'up', 'down', 'space', 'r' }
+local keyBindings = { 'left', 'right', 'up', 'down', 'space', 'r' }
 
 local players
 
@@ -123,7 +123,7 @@ function World:update(dt)
             elseif cmd == 'di' then
               isDirty = true
               local pIdx = tonumber(args[1])
-              players[pIdx].digging = args[2]
+              players[pIdx].digging = args[2] == 't'
               self:updateLabelPlayer(pIdx)
             elseif cmd == 'wo' then
               isDirty = true
@@ -164,9 +164,8 @@ end
 
 function World:updateLabelPlayer(idx)
   local pl = players[idx]
-  if not pl.captured or not pl.holesLeft or not pl.digging then return end
-  local action = 'dig'
-  if pl.digging == 'N' then action = 'place' end
+  if not pl.captured or not pl.holesLeft or pl.digging == nil then return end
+  local action = pl.digging and 'dig' or 'place'
   local txt = 'P' .. idx .. ' ' ..  action .. ' oil:' .. pl.captured .. ' holes:' .. pl.holesLeft
   self['lp' .. idx]:setValue(txt)
 end
@@ -202,7 +201,7 @@ function World:redraw()
             color = gc.colors.sky
           elseif v == gc.materials.player[1] or v == gc.materials.player[2] then
             local pIdx = v - gc.materials.player[1] + 1
-            color  = (players[pIdx].digging == 'Y') and gc.colors.earth or gc.colors.dirt
+            color  = players[pIdx].digging and gc.colors.earth or gc.colors.dirt
             isPlayer = true
           elseif v == gc.materials.sink[1] or v == gc.materials.sink[2] then
             -- color = { 0.3, 0.3, 0.3 }
@@ -286,22 +285,21 @@ end
 
 function World:onKey(key)
     if key == 'escape' then
-        -- host:disconnect_now()
-        host:get_peer(1):disconnect_now()
+        peer:disconnect_now()
         love.event.quit()
     end
 
-    for _, k in ipairs(bindings) do
+    for _, k in ipairs(keyBindings) do
         if key == k then
-            host:broadcast("kd " .. key)
+            peer:send("kd " .. key)
         end
     end
 end
 
 function World:onKeyUp(key)
-    for _, k in ipairs(bindings) do
+    for _, k in ipairs(keyBindings) do
         if key == k then
-            host:broadcast("ku " .. key)
+            peer:send("ku " .. key)
         end
     end
 end
