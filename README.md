@@ -20,11 +20,7 @@ _Controls_ ⌨️
 
 ## TODO 🧑‍🍳
 
-- sound 🔉
-  - samples for:
-    - oil flowing
-    - oil being captured
-- title screen 🇴 🇮 🇱 🇾
+- title screen 🇴 🇮 🇱 🇾 (ongoing...)
 - instructions 📃
 - eyecandy 🌈
   - fullscreen toggle
