@@ -1,7 +1,7 @@
 -- [[ this is loaded by love2d and affects its runtime ]] --
 -- https://love2d.org/wiki/Config_Files
 love.conf = function(t)
-  t.identity = "tabletop"
+  t.identity = "oily"
   t.appendidentity = true
   t.highdpi = true
   t.accelerometerjoystick = false
@@ -15,5 +15,5 @@ love.conf = function(t)
 
   -- t.window.width = 640
   -- t.window.height = 480
-  t.window.title = "tabletop"
+  t.window.title = "oily"
 end

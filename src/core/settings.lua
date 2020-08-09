@@ -5,8 +5,8 @@ require("src.ext.json") -- json.encode / decode
 local LF = love.filesystem
 
 -- will be stored at:
--- C:\Users\josep\AppData\Roaming\LOVE\tabletop\settings.json
--- ~/Library/Application Support/LOVE/tabletop/settings.json
+-- C:\Users\josep\AppData\Roaming\LOVE\oily\settings.json
+-- ~/Library/Application Support/LOVE/oily/settings.json
 local SETTINGS_FILE = "settings.json"
 
 local DEFAULTS = {

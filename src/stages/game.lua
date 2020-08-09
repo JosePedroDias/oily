@@ -1,6 +1,5 @@
 -- [[ game screen handling ]] --
 local Client = require "src.game.client"
-local utils = require "src.core.utils"
 
 local M = {}
 

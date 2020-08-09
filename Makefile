@@ -45,6 +45,8 @@ dist:	getRidOfDsStores
 	@rm -rf ext/luaunit.lua build/test
 	@find ./build -type f -exec sed -iE 's/src.//g' {} \;
 	@rm -rf ./build/*.luaE
+	@rm -rf ./build/*.svg
+	@rm -rf ./build/*.svg
 	@echo "code hash: $(codehash), date: $(codedate)"
 	@sed -i -e 's/__GITHASH__/$(codehash)/g' build/core/consts.lua
 	@sed -i -e 's/__GITDATE__/$(codedate)/g' build/core/consts.lua

@@ -42,6 +42,36 @@ M.tableToString = function(tt, indent, done)
   end
 end
 
+M.isTableArray = function(tbl)
+    local i = 0
+    for _ in pairs(tbl) do
+        i = i + 1
+        if tbl[i] == nil then return false end
+    end
+    return true
+end
+
+M.serialize = function(v)
+  local t = type(v)
+  if t == 'table' then
+    local s = '{'
+    if M.isTableArray(v) then
+      for _, vv in ipairs(v) do
+        s = s .. M.serialize(vv) .. ','
+      end
+    else
+      for kk, vv in pairs(v) do
+        s = s .. '"' .. kk .. '"=' .. M.serialize(vv) .. ','
+      end
+    end
+    return s:sub(1, -2) .. '}'
+  elseif t == 'string' then
+    return '"' .. v .. '"'
+  else
+    return tostring(v)
+  end
+end
+
 M.toString = function(tbl)
   if "nil" == type(tbl) then
     return tostring(nil)

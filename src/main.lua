@@ -5,6 +5,7 @@ local screen = require "src.core.screen"
 local stages = require "src.core.stages"
 -- local settings = require "src.core.settings"
 
+-- local title = require "src.stages.title"
 local game = require "src.stages.game"
 
 function love.load(arg)
@@ -31,6 +32,7 @@ function love.load(arg)
     screen.setSize(sW, sH, consts.W, consts.H, true)
   end
 
+  -- stages.setStage("title", title)
   stages.setStage("game", game)
   stages.toStage("game")
 end

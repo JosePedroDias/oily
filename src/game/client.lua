@@ -9,7 +9,6 @@ local Label = require "src.ui.label"
 
 local G = love.graphics
 
-local S = 6 -- cell size in pixels
 local KEY_BINDINGS = { 'left', 'right', 'up', 'down', 'space', 'r' }
 local D2R = math.pi / 180
 
@@ -97,7 +96,7 @@ function Client:update(dt)
     local event
     while true do
         event = host:service()
-        if not event then break end
+        if not event then break end -- is this useful?
         if event.type == "receive" then
             local data = event.data
             local cmd = data:sub(1, 2)
@@ -221,6 +220,7 @@ function Client:redraw()
 
     local w = gc.W
     local h = gc.H
+    local S = gc.S
 
     local pPos = { false, false }
     local tPos = {}
@@ -328,7 +328,8 @@ end
 
 function Client:onKey(key)
     if key == 'escape' then
-        peer:disconnect_now()
+        peer:disconnect()
+        host:flush()
         love.event.quit()
     end
 

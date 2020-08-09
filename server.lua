@@ -5,6 +5,7 @@ local gc = require "src.game.consts"
 local raster = require "src.game.raster"
 local utils = require "src.core.utils"
 local consts = require "src.core.consts"
+local titleMatrix = require "src.game.titleMatrix"
 
 math.randomseed(os.time())
 
@@ -95,43 +96,55 @@ local function newGame()
     T = 0
     srv.setTime(T)
 
-    -- matrix
-    m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
-    
-    --fill the sky
-    mm.srect(1, 1, gc.W, SKY_Y, gc.materials.sky)
+    if true then
+        -- matrix
+        m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
+        
+        --fill the sky
+        mm.srect(1, 1, gc.W, SKY_Y, gc.materials.sky)
 
-    -- caves with perlin noise
-    local ns = 0.05
-    for x = 1, gc.W do
-        for y = SKY_Y+1, gc.H do
-            local v = raster.noise(x*ns, y*ns, 0)
-            if v > 0.1 then
-                mm.s(x, y, gc.materials.earth)
+        -- caves with perlin noise
+        local ns = 0.05
+        for x = 1, gc.W do
+            for y = SKY_Y+1, gc.H do
+                local v = raster.noise(x*ns, y*ns, 0)
+                if v > 0.1 then
+                    mm.s(x, y, gc.materials.earth)
+                end
             end
         end
-    end
 
-    -- rocks
-    for _ = 1, NUM_ROCKS do
-        local r = math.floor( math.random() * 15 ) + 5
-        local p = randomPos(r + 3)
-        raster.filledCircle(p[1], p[2], r, mm, gc.materials.rock)
-    end
+        -- rocks
+        for _ = 1, NUM_ROCKS do
+            local r = math.floor( math.random() * 15 ) + 5
+            local p = randomPos(r + 3)
+            raster.filledCircle(p[1], p[2], r, mm, gc.materials.rock)
+        end
 
-    -- oil
-    oilCells = {}
-    for _ = 1, NUM_INITIAL_OILS do
-        while true do
-            local p = randomPos(0, 20)
-            if mm.g(p[1], p[2]) == gc.materials.dirt then
-                table.insert(oilCells, p)
-                break
+        -- oil
+        oilCells = {}
+        for _ = 1, NUM_INITIAL_OILS do
+            while true do
+                local p = randomPos(0, 20)
+                if mm.g(p[1], p[2]) == gc.materials.dirt then
+                    table.insert(oilCells, p)
+                    break
+                end
             end
         end
-    end
-    for _, c in ipairs(oilCells) do
-        mm.s(c[1], c[2], gc.materials.oil)
+        for _, c in ipairs(oilCells) do
+            mm.s(c[1], c[2], gc.materials.oil)
+        end
+    else
+        m = titleMatrix
+        oilCells = {}
+        for x = 1, gc.W do
+            for y = 1, gc.H do
+                if m[x][y] == gc.materials.oil then
+                    table.insert(oilCells, {x, y})
+                end
+            end
+        end
     end
 
     -- sinks
