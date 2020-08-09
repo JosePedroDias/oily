@@ -263,7 +263,7 @@ function Client:redraw()
 
     G.setCanvas(self.canvas)
 
-    pcall(G.clear, {0, 0, 0, 0})
+    pcall(G.clear, gc.colors.worldBg)
 
     local w = gc.W
     local h = gc.H
@@ -272,9 +272,8 @@ function Client:redraw()
     local pPos = { false, false }
     local tPos = {}
 
-    for x = 1, w do
-        for y = 1, h do
-          local v = self.m[x][y]
+    local function drawCell(x, y, pass, d)
+      local v = self.m[x][y]
           local color
           local isPlayer = false
           local isTower = false
@@ -293,7 +292,6 @@ function Client:redraw()
             color  = players[pIdx].digging and gc.colors.earth or gc.colors.dirt
             isPlayer = true
           elseif v == gc.materials.sink[1] or v == gc.materials.sink[2] then
-            -- color = { 0.3, 0.3, 0.3 }
             color = gc.colors.sky
             isTower = true
           end
@@ -301,24 +299,45 @@ function Client:redraw()
           local X = (x-1) * S
           local Y = (y-1) * S
 
-          if isPlayer then
-            local pIdx = v - gc.materials.player[1] + 1
-            pPos[pIdx] = { X, Y }
-          elseif isTower then
-            local pIdx = v - gc.materials.sink[1] + 1
-            table.insert(tPos, {
-              pIdx,
-              { X + S/2, Y + S/2 - 10 }
-            })
+          if pass == 1 then
+            if isPlayer then
+              local pIdx = v - gc.materials.player[1] + 1
+              pPos[pIdx] = { X, Y }
+            elseif isTower then
+              local pIdx = v - gc.materials.sink[1] + 1
+              table.insert(tPos, {
+                pIdx,
+                { X + S/2, Y + S/2 - 10 }
+              })
+            end
           end
 
-          pcall(G.setColor, color)
-          G.rectangle("fill", X, Y, S, S)
+          if pass == 1 and (v ~= gc.materials.earth and v ~= gc.materials.sky) then
+            -- noop for drawing on 1st pass other stuff (just draw earth and sky)
+          elseif pass == 2 and (v == gc.materials.earth or v == gc.materials.sky) then
+            -- noop for drawing earth or sky on 2nd pass
+          else
+            pcall(G.setColor, color)
+            G.rectangle("fill", X+d, Y+d, S, S)
+          end
+          
+    end
+
+    for x = 1, w do
+      for y = 1, h do
+        drawCell(x, y, 1, 3)
+      end
+    end
+
+    for x = 1, w do
+        for y = 1, h do
+          drawCell(x, y, 2, 0)
         end
       end
 
       G.setColor(1, 1, 1)
       
+      -- draw players
       local SP = 0.15
       for pIdx = 1, 2 do
         local p = pPos[pIdx]
@@ -353,6 +372,7 @@ function Client:redraw()
         end
       end
 
+      -- draw towers
       local TP = 0.2
       for _, pair in ipairs(tPos) do
         local pIdx = pair[1]
