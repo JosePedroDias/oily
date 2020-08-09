@@ -302,6 +302,7 @@ generateServer({
 
     if not player then
         print('onReceive: player not found')
+        return
     end
 
     local cmd = data:sub(1, 2)
