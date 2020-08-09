@@ -17,14 +17,11 @@ _Controls_:
 - arrows move the player
 - space bar toggles between placing and digging dirt (having reached 0 holes the mode switches for you as well)
 
-## BUGS 🐞
-
-- game state seems borked when a NEW game occurs (server issue?)
-
 ## TODO 🧑‍🍳
 
-- confirm players don't spawn in oil or rock (deadlock)
-- debug server stability issues
+- procedural map
+  - confirm oil starts not in/surrounded by cave (not REQUIRED)
+  - more than one tower per player? (may be confusing)
 - eyecandy
   - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
   - add a sky texture
@@ -32,8 +29,16 @@ _Controls_:
 - network
   - remove space btw cmd and args in netcode
   - support multiple games in the same server?
+    - op1: above 2 players kicks client
+    - op2: above 2 players places client in channel 2, to play next
+      - will other players spectate or just wait?
+    - accept players above 2?
+- playability
+  - eventual support for more than 2 players? (server-side already works I guess)
 - title screen
-- detect game over (deadlocks...)
+- detect game overs
+  - player between oil
+  - no more holes (player spent theirs and oil filled map holes)
 
 ## Credits 😅
 

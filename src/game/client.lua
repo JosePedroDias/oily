@@ -7,8 +7,8 @@ local gc = require "src.game.consts"
 local assets = require "src.core.assets"
 local Label = require "src.ui.label"
 
-local HOST = "127.0.0.1"
--- local HOST = 'nc.xsl.pt'
+-- local HOST = "127.0.0.1"
+local HOST = 'nc.xsl.pt'
 local PORT = 52225
 
 local host = enet.host_create()
@@ -21,11 +21,14 @@ local D2R = math.pi / 180
 local Client = {x=0, y=0, width=consts.W, height=consts.H}
 
 local S = 6 -- cell size in pixels
+
+local KEY_BINDINGS = { 'left', 'right', 'up', 'down', 'space', 'r' }
+
 local t = 0
 local connected = false
 local winnerIdx
 
-local keyBindings = { 'left', 'right', 'up', 'down', 'space', 'r' }
+
 
 local players
 
@@ -60,6 +63,8 @@ end
 
 function Client:reset()
   print('new game!')
+
+  winnerIdx = nil
 
   players = {}
   players[1] = {
@@ -299,7 +304,7 @@ function Client:onKey(key)
         love.event.quit()
     end
 
-    for _, k in ipairs(keyBindings) do
+    for _, k in ipairs(KEY_BINDINGS) do
         if key == k then
             peer:send("kd " .. key)
         end
@@ -307,7 +312,7 @@ function Client:onKey(key)
 end
 
 function Client:onKeyUp(key)
-    for _, k in ipairs(keyBindings) do
+    for _, k in ipairs(KEY_BINDINGS) do
         if key == k then
             peer:send("ku " .. key)
         end
