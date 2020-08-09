@@ -40,9 +40,21 @@ function Client:new(o)
   local lBg = nil
   local l2Bg = {0,0,0,0.3}
 
+  -- sfx
+  assets.sfx.motor1:setLooping(true)
+  assets.sfx.motor1:setPitch(1.1)
+  assets.sfx.motor2:setLooping(true)
+  assets.sfx.motor1:setVolume(0.2)
+  assets.sfx.motor2:setVolume(0.2)
+
+  assets.sfx.setMode:setVolume(1)
+  assets.sfx.setModeEmpty:setVolume(1)
+
+  -- gfx
   gPlayers = { assets.gfx.player1,  assets.gfx.player2 }
   gTowers = { assets.gfx.tower1,  assets.gfx.tower2 }
 
+  -- overlays
   o.l   = Label:new({x=consts.W/2-100, y=0, width=200, color=darkClr, background=lBg})
   o.lp1 = Label:new({x=0,              y=0, width=300, color=darkClr, background=lBg})
   o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, color=darkClr, background=lBg})
@@ -51,7 +63,6 @@ function Client:new(o)
   
   o.canvas = G.newCanvas(o.width, o.height)
 
-  --o:reset()
   o:redraw()
 
   return o
@@ -113,38 +124,58 @@ function Client:update(dt)
             local dy = tonumber(args[3])
             players[pIdx].dir = { dx, dy }
             self:updateLabelPlayer(pIdx)
-            elseif cmd == 'ca' then
-              isDirty = true
-              local pIdx = tonumber(args[1])
-              players[pIdx].captured = tonumber(args[2])
-              self:updateLabelPlayer(pIdx)
-            elseif cmd == 'hl' then
-              isDirty = true
-              local pIdx = tonumber(args[1])
-              players[pIdx].holesLeft = tonumber(args[2])
-              self:updateLabelPlayer(pIdx)
-            elseif cmd == 'di' then
-              isDirty = true
-              local pIdx = tonumber(args[1])
-              players[pIdx].digging = args[2] == 't'
-              self:updateLabelPlayer(pIdx)
-            elseif cmd == 'wo' then
-              isDirty = true
-              local pIdx = tonumber(args[1])
-              winnerIdx = pIdx
-              self:updateLabel()
-            elseif cmd == 'ng' then
-              -- isDirty = true
-              self:reset()
-            elseif cmd == 've' then
-              if (args[1] ~= consts.version) then
-                local msg = 'Server has version ' .. args[1] .. ' while client ' .. consts.version .. '\n' .. '. you should update.'
-                print(msg)
-                love.window.showMessageBox('caution', msg, 'warning', true)
-              end
+          elseif cmd == 'pm' then
+            local pIdx = tonumber(args[1])
+            local isMoving = args[2] == 't'
+            local sample = pIdx == 1 and assets.sfx.motor1 or assets.sfx.motor2
+            if isMoving then
+              love.audio.play(sample)
             else
-                print('did not process message: [' .. data .. ']')
+              sample:stop()
             end
+          elseif cmd == 'ca' then
+            isDirty = true
+            local pIdx = tonumber(args[1])
+            players[pIdx].captured = tonumber(args[2])
+            self:updateLabelPlayer(pIdx)
+          elseif cmd == 'hl' then
+            isDirty = true
+            local pIdx = tonumber(args[1])
+            players[pIdx].holesLeft = tonumber(args[2])
+            self:updateLabelPlayer(pIdx)
+          elseif cmd == 'di' then
+            isDirty = true
+            local pIdx = tonumber(args[1])
+            players[pIdx].digging = args[2] == 't'
+            self:updateLabelPlayer(pIdx)
+            -- play mode change queue (busted is different)
+            local sample = players[pIdx].holesLeft < 4 and assets.sfx.setModeEmpty or assets.sfx.setMode
+            love.audio.play(sample)
+
+            -- change pitch of motor sample
+            sample = pIdx == 1 and assets.sfx.motor1 or assets.sfx.motor2
+            local v = pIdx == 1 and 1.1 or 1
+            if players[pIdx].digging then
+              v = v * 0.75
+            end
+            sample:setPitch(v)
+          elseif cmd == 'wo' then
+            isDirty = true
+            local pIdx = tonumber(args[1])
+            winnerIdx = pIdx
+            self:updateLabel()
+          elseif cmd == 'ng' then
+            -- isDirty = true
+            self:reset()
+          elseif cmd == 've' then
+            if (args[1] ~= consts.version) then
+              local msg = 'Server has version ' .. args[1] .. ' while client ' .. consts.version .. '\n' .. '. you should update.'
+              print(msg)
+              love.window.showMessageBox('caution', msg, 'warning', true)
+            end
+          else
+              print('did not process message: [' .. data .. ']')
+          end
         elseif event.type == "connect" then
             connected = true
             self:updateLabel()
@@ -300,6 +331,10 @@ function Client:onKey(key)
         peer:disconnect_now()
         love.event.quit()
     end
+
+    -- love.audio.play(assets.sfx.oil) -- seems good for no more holes or digging
+    -- love.audio.play(assets.sfx.dirt)
+    -- love.audio.play(assets.sfx.motor1) -- needs cutting
 
     for _, k in ipairs(KEY_BINDINGS) do
         if key == k then

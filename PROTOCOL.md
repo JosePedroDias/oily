@@ -18,9 +18,13 @@ The server manages it and sends updates based on player states, oil shape and wh
 
     sr <x>,<y>,<w>,<h>,<v>
 
-(set player direction)
+(player direction)
 
     pd <dx>,<dy>
+
+(player moving)
+
+    pm <dx>,<t/f>
 
 (captured)
 

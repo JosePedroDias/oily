@@ -22,10 +22,14 @@ M.load = function()
   M.gfx["tower2"] = LG.newImage(gfxDir .. "/tower-blue.png")
   -- print('gfx #' .. utils.countKeys(M.gfx))
 
-  M.sfx["motor1"] = LA.newSource(sfxDir .. "/motor1.ogg", "static")
-  M.sfx["motor2"] = LA.newSource(sfxDir .. "/motor2.ogg", "static")
-  M.sfx["dirt"] = LA.newSource(sfxDir .. "/dirt.ogg", "static")
-  M.sfx["oil"] = LA.newSource(sfxDir .. "/oil.ogg", "static")
+  M.sfx["motor1"] = LA.newSource(sfxDir .. "/motor.ogg", "static") -- todo hack
+  M.sfx["motor2"] = LA.newSource(sfxDir .. "/motor.ogg", "static")
+
+  M.sfx["setMode"]      = LA.newSource(sfxDir .. "/setMode.ogg",      "static")
+  M.sfx["setModeEmpty"] = LA.newSource(sfxDir .. "/setModeEmpty.ogg", "static")
+
+  
+  
   -- print('sfx #' .. utils.countKeys(M.sfx))
 
   -- local swingjedingMusic = love.audio.newSource("sounds/swingjeding.ogg", "stream")

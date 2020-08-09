@@ -22,14 +22,13 @@ _Controls_ ⌨️
 
 - sound 🔉
   - samples for:
-    - digging dirt
-    - placing dirt
-    - no more dirt to dig
     - oil flowing
     - oil being captured
-- title screen 🇴🇮🇱 🇾
+- title screen 🇴 🇮 🇱 🇾
 - instructions 📃
 - eyecandy 🌈
+  - fullscreen toggle
+  - hint exact placement of extraction (vertical line in tower)
   - add a sky texture
   - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
   - close in camera according to action context

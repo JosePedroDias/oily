@@ -365,6 +365,9 @@ generateServer({
         elseif key == 'down' then
             player.dPos[2] = 1
         end
+        if prevDPos[1] == 0 and prevDPos[2] == 0 and (player.dPos[1] ~= 0 or player.dPos[2] ~= 0) then
+            srv.broadcast('pm '.. pIdx .. ',t')
+        end
     elseif cmd == 'ku' then
         if key == 'up' or key == 'down' then
             player.dPosOld = {player.dPos[1], player.dPos[2]}
@@ -372,6 +375,9 @@ generateServer({
         elseif key == 'left' or key == 'right' then
             player.dPosOld = {player.dPos[1], player.dPos[2]}
             player.dPos[1] = 0
+        end
+        if player.dPos[1] == 0 and player.dPos[2] == 0 and (prevDPos[1] ~= 0 or prevDPos[2] ~= 0) then
+            srv.broadcast('pm '.. pIdx .. ',f')
         end
     else
         print(data)
