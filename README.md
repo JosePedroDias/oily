@@ -20,26 +20,28 @@ _Controls_:
 
 ## TODO 🧑‍🍳
 
-- procedural map
-  - confirm oil starts not in/surrounded by cave (not REQUIRED)
-  - more than one tower per player? (may be confusing)
-- eyecandy
-  - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
-  - add a sky texture
-  - zoom camera according to action
-- network
-  - remove space btw cmd and args in netcode
-  - support multiple games in the same server?
-    - op1: above 2 players kicks client
-    - op2: above 2 players places client in channel 2, to play next
-      - will other players spectate or just wait?
-    - accept players above 2?
-- playability
-  - eventual support for more than 2 players? (server-side already works I guess)
+- sound
+  - samples for
+    - digging dirt
+    - placing dirt
+    - no more dirt to dig
+    - oil flowing
+    - oil being captured
 - title screen
+- instructions?
+- eyecandy
+  - add a sky texture
+  - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
+  - close in camera according to action context
+- network
+  - for now 2 slots in a single channel/session. additional people wait for turn to enter
+  - remove space btw cmd and args in netcode
 - detect game overs
   - player between oil
   - no more holes (player spent theirs and oil filled map holes)
+- procedural map
+  - confirm oil starts not in/surrounded by cave (not REQUIRED)
+  - more than one tower per player? (may be confusing)
 
 ## Credits 😅
 
