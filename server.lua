@@ -95,7 +95,7 @@ local function newGame()
     nextPlayerMoveT = NEXT_PLAYER_MOVE_DT
     T = 0
     srv.setTime(T)
-
+    
     if true then
         -- matrix
         m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)

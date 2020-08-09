@@ -11,6 +11,7 @@ local G = love.graphics
 
 local KEY_BINDINGS = { 'left', 'right', 'up', 'down', 'space', 'r' }
 local D2R = math.pi / 180
+local REVIEW_SAMPLES_DT = 0.5
 
 local host = enet.host_create()
 local peer = host:connect(consts.host .. ":" .. consts.port)
@@ -23,6 +24,9 @@ local players
 
 local gPlayers
 local gTowers
+
+local nextReviewSamplesT
+local eventFrequencies -- holds histogram of relevant events to set or stop oil/extract sound
 
 local Client = {x=0, y=0, width=consts.W, height=consts.H}
 
@@ -49,6 +53,9 @@ function Client:new(o)
   assets.sfx.setMode:setVolume(1)
   assets.sfx.setModeEmpty:setVolume(1)
 
+  assets.sfx.extract:setLooping(true)
+  assets.sfx.oil:setLooping(true)
+
   -- gfx
   gPlayers = { assets.gfx.player1,  assets.gfx.player2 }
   gTowers = { assets.gfx.tower1,  assets.gfx.tower2 }
@@ -70,6 +77,8 @@ end
 function Client:reset()
   print('new game!')
 
+  assets.sfx.go:play()
+
   winnerIdx = nil
 
   players = {}
@@ -81,6 +90,13 @@ function Client:reset()
       color = { 0, 1, 0 },
       dir = { -1, 0 }
   }
+
+  eventFrequencies = {
+    oil = 0,
+    extract = 0
+  }
+  nextReviewSamplesT = REVIEW_SAMPLES_DT
+  -- TODO CONFIRM t GETS TO 0
   
   self.m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
   self:updateLabel()
@@ -88,8 +104,27 @@ function Client:reset()
   self:updateLabelPlayer(2)
 end
 
+local function toggleSampleIfNecessary(sample, freq)
+  if freq > 0 and not sample:isPlaying() then
+    sample:play()
+  elseif freq == 0 and sample:isPlaying() then
+    sample:stop()
+  end
+end
+
 function Client:update(dt)
     t = t + dt
+
+    if nextReviewSamplesT and t >= nextReviewSamplesT then
+      toggleSampleIfNecessary(assets.sfx.oil,     eventFrequencies.oil)
+      toggleSampleIfNecessary(assets.sfx.extract, eventFrequencies.extract)
+
+      nextReviewSamplesT = t + REVIEW_SAMPLES_DT
+      eventFrequencies = {
+          oil = 0,
+          extract = 0
+      }
+    end
 
     local isDirty = false
     -- NETWORK RECEIVE CODE
@@ -103,7 +138,11 @@ function Client:update(dt)
             local args = utils.split(data:sub(4), ',')
             if cmd == 'sm' then
                 isDirty = true
-                self.m[tonumber(args[1])][tonumber(args[2])] = tonumber(args[3])
+                local mat = tonumber(args[3])
+                self.m[tonumber(args[1])][tonumber(args[2])] = mat
+                if mat == gc.materials.oil then
+                  eventFrequencies.oil = eventFrequencies.oil + 1
+                end
             elseif cmd == 'sr' then
               isDirty = true
               local x = tonumber(args[1])
@@ -136,6 +175,7 @@ function Client:update(dt)
             isDirty = true
             local pIdx = tonumber(args[1])
             players[pIdx].captured = tonumber(args[2])
+            eventFrequencies.extract = eventFrequencies.extract + 1
             self:updateLabelPlayer(pIdx)
           elseif cmd == 'hl' then
             isDirty = true
@@ -163,6 +203,13 @@ function Client:update(dt)
             local pIdx = tonumber(args[1])
             winnerIdx = pIdx
             self:updateLabel()
+            if #players == 1 then
+              assets.sfx['win-solo']:play()
+            else
+              -- TODO client needs to know which player he is!
+              assets.sfx['win-p1']:play()
+              -- assets.sfx['win-p2']:play()
+            end
           elseif cmd == 'ng' then
             -- isDirty = true
             self:reset()
