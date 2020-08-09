@@ -1,12 +1,12 @@
 -- [[ game screen handling ]] --
-local World = require "src.game.world"
+local Client = require "src.game.client"
 local utils = require "src.core.utils"
 
 local M = {}
 
 M.load = function()
   love.window.setTitle("oily")
-  M.w = World:new({})
+  M.w = Client:new({})
 end
 
 M.unload = function()

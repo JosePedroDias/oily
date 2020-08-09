@@ -2,7 +2,11 @@ local generateServer = require("EnetServer")
 
 local flood = require "src.game.flood"
 local gc = require "src.game.consts"
+local raster = require "src.game.raster"
 local utils = require "src.core.utils"
+local consts = require "src.core.consts"
+
+math.randomseed(os.time())
 
 -- local lovebird = require("lovebird")
 -- lovebird.init()
@@ -24,15 +28,11 @@ local sinks = {
     { {cx+dx, skyY} }
 }
 
-local initialOilCells = {
-    { cx, 80 }
-}
-
 local players
 
 local clientIdToPlayerIdx
 
-local nextPlayerMoveDt = 0.05
+local nextPlayerMoveDt = 0.04
 local nextPlayerMoveT = nextPlayerMoveDt
 local nextBleedDt = 0.2
 local nextBleedT
@@ -81,16 +81,65 @@ local function newGame()
     srv.broadcast('ng')
 
     gameGoingOn = true
-
     bleedSpeedFactor = 0.98
-
     T = 0
     srv.setTime(T)
 
-    players = {}
-
     local numClients = srv.getNumClients()
 
+    -- matrix
+    m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
+
+    mm.srect(1, 1, gc.W, skyY, gc.materials.sky)
+
+    -- terrain
+    --raster.line(60, 60, 80, 80, mm, gc.materials.earth)
+
+    -- caves with perlin noise
+    local ns = 0.05
+    for x = 1, gc.W do
+        for y = skyY+1, gc.H do
+            local v = raster.noise(x*ns, y*ns, 0)
+            if v > 0.1 then
+                mm.s(x, y, gc.materials.earth)
+            end
+        end
+    end
+
+    -- rocks
+    for _ = 1, 3 do
+        local r = math.floor( math.random() * 15 ) + 5
+        local x = math.ceil( math.random() * (gc.W - r*2) ) + r
+        local y = math.ceil( math.random() * (gc.H - skyY - r*2) ) + skyY + r
+        raster.filledCircle(x, y, r, mm, gc.materials.rock)
+    end
+
+    -- oil
+    oilCells = {}
+    for _ = 1, 2 do
+        while true do
+            local x = math.ceil( math.random() * (gc.W) )
+            local y = math.ceil( math.random() * (gc.H - skyY-1) ) + skyY + 1
+            if mm.g(x, y) == gc.materials.dirt then
+                table.insert(oilCells, {x, y})
+                break
+            end
+        end
+    end
+
+    for _, c in ipairs(oilCells) do
+        mm.s(c[1], c[2], gc.materials.oil)
+    end
+
+    -- sinks
+    for pIdx = 1, numClients do
+        for _, si in ipairs(sinks[pIdx]) do
+            mm.s(si[1], si[2], gc.materials.sink[pIdx])
+        end
+    end
+
+    -- players
+    players = {}
     for pIdx = 1, numClients do
         local pos = initialPositions[pIdx]
         local pl = {
@@ -107,40 +156,17 @@ local function newGame()
         srv.broadcast('di ' .. pIdx .. ',f')
     end
 
-    oilCells = {}
-    for _, oc in ipairs(initialOilCells) do
-        table.insert(oilCells, oc)
-    end
-
-    m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
-
-    mm.srect(1, 1, gc.W, skyY, gc.materials.sky)
-
-    for _, c in ipairs(oilCells) do
-        mm.s(c[1], c[2], gc.materials.oil)
-    end
-
-    for pIdx = 1, #players do
+    for pIdx = 1, numClients do
         local pl = players[pIdx]
         flood.carveHole(pl.pos, gc.materials.player[pIdx], mm)
     end
 
-    for pIdx = 1, #players do
-        local pl = players[pIdx]
-        flood.carveHole(pl.pos, gc.materials.player[pIdx], mm)
+    --[[ Z = {}
+    Z.players = players
+    Z.oilCells = oilCells
+    Z.m = m ]]
 
-        for _, si in ipairs(sinks[pIdx]) do
-            mm.s(si[1], si[2], gc.materials.sink[pIdx])
-        end
-    end
-
-    --[[ ZZZ = {}
-    ZZZ.players = players
-    print('players #' .. #players)
-    ZZZ.oilCells = oilCells
-    print('oilCells #' .. #oilCells)
-    ZZZ.m = m ]]
-
+    -- set oil velocity
     updateNextBleedT(0)
 end
 
@@ -267,17 +293,19 @@ local function updateClientIdToPlayerIdx()
     end
 end
 
+print('oily server ' .. consts.version)
 generateServer({
   api = srv,
   port = 52225,
-  fps = 60,
-  debug = true,
+  fps = 40,
+  --debug = true,
   onUpdate = function(t)
     if nextBleedT then
         update(t)
     end
   end,
   onNewClient = function(clientId, t)
+    srv.send('ve ' .. consts.version, clientId)
     local numClients = srv.getNumClients()
     print('#clients '.. numClients)
     updateClientIdToPlayerIdx()
@@ -292,6 +320,14 @@ generateServer({
     end
   end,
   onReceive = function(data, clientId, t)
+    -- NETWORK RECEIVE CODE
+
+    -- to allow restart from finished games
+    if data == 'kd r' then
+        newGame()
+        return
+    end
+
     if not gameGoingOn then
         return
     end
@@ -332,8 +368,6 @@ generateServer({
             player.dPos[2] = -1
         elseif key == 'down' then
             player.dPos[2] = 1
-        elseif key == 'r' then
-            newGame()
         end
     elseif cmd == 'ku' then
         if key == 'up' or key == 'down' then

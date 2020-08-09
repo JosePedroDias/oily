@@ -4,19 +4,21 @@ M.W = 167 -- (screenW/S)
 M.H = 125
 
 M.colors = {
-    sky = {0.5, 0.9, 0.9},
-    earth = {0.6, 0.3, 0},
-    dirt = {0.9, 0.4, 0},
+    sky = {0.6, 0.8, 0.8},
+    earth = {0.4, 0.2, 0.1}, 
+    dirt = {0.6, 0.3, 0.15},
+    rock = {0.4, 0.4, 0.4},
     oil = {0, 0, 0}
 }
 
 M.materials = {
-    earth = 1,
-    dirt = 2,
-    sky = 3,
-    oil = 4,
-    player = { 5, 6 },
-    sink = { 7, 8 }
+    player = { 1, 2 },
+    sink = { 3, 4 },
+    earth = 5,
+    dirt = 6,
+    sky = 7,
+    rock = 8,
+    oil = 9
 }
 
 M.ahead = {}

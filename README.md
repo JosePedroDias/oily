@@ -23,18 +23,16 @@ _Controls_:
 
 ## TODO 🧑‍🍳
 
-- server saying its version. client aborting if different, requiring upgrade
 - debug server stability issues
-- use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
-- add a sky texture
-- zoom camera according to action
-- remove space btw cmd and args in netcode
-- have a couple more base maps (placement of sinks and players)
+- eyecandy
+  - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
+  - add a sky texture
+  - zoom camera according to action
+- network
+  - remove space btw cmd and args in netcode
+  - support multiple games in the same server?
 - title screen
-- generate noise rocks procedurally
-- generate earth gaps too
 - detect game over (deadlocks...)
-- support multiple games in the same server?
 
 ## Credits 😅
 

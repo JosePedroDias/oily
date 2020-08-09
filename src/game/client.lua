@@ -1,4 +1,4 @@
---[[ world ]] --
+--[[ Client ]] --
 
 local enet = require "enet"
 local utils = require "src.core.utils"
@@ -18,7 +18,7 @@ local G = love.graphics
 
 local D2R = math.pi / 180
 
-local World = {x=0, y=0, width=consts.W, height=consts.H}
+local Client = {x=0, y=0, width=consts.W, height=consts.H}
 
 local S = 6 -- cell size in pixels
 local t = 0
@@ -32,10 +32,12 @@ local players
 local gPlayers
 local gTowers
 
-function World:new(o)
+function Client:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
+
+  print('oily client ' .. consts.version)
 
   local lColor = {0.1, 0.1, 0.1}
   -- local lBg = {0,0,0,0.3}
@@ -56,7 +58,7 @@ function World:new(o)
   return o
 end
 
-function World:reset()
+function Client:reset()
   print('new game!')
 
   players = {}
@@ -75,7 +77,7 @@ function World:reset()
   self:updateLabelPlayer(2)
 end
 
-function World:update(dt)
+function Client:update(dt)
     t = t + dt
 
     local isDirty = false
@@ -131,8 +133,14 @@ function World:update(dt)
               winnerIdx = pIdx
               self:updateLabel()
             elseif cmd == 'ng' then
-              isDirty = true
+              -- isDirty = true
               self:reset()
+            elseif cmd == 've' then
+              if (args[1] ~= consts.version) then
+                local msg = 'Server has version ' .. args[1] .. ' while client ' .. consts.version .. '\n' .. '. you should update.'
+                print(msg)
+                love.window.showMessageBox('caution', msg, 'warning', true)
+              end
             else
                 print('did not process message: [' .. data .. ']')
             end
@@ -152,7 +160,7 @@ function World:update(dt)
     end
 end
 
-function World:updateLabel()
+function Client:updateLabel()
   local txt = 'connected?' .. (connected and 'Y' or 'N')
 
   if winnerIdx then
@@ -162,7 +170,7 @@ function World:updateLabel()
   self.l:setValue(txt)
 end
 
-function World:updateLabelPlayer(idx)
+function Client:updateLabelPlayer(idx)
   local pl = players[idx]
   if not pl.captured or not pl.holesLeft or pl.digging == nil then return end
   local action = pl.digging and 'dig' or 'place'
@@ -170,7 +178,7 @@ function World:updateLabelPlayer(idx)
   self['lp' .. idx]:setValue(txt)
 end
 
-function World:redraw()
+function Client:redraw()
     if not self.m then
       return
     end
@@ -199,6 +207,8 @@ function World:redraw()
             color = gc.colors.oil
           elseif v == gc.materials.sky then
             color = gc.colors.sky
+          elseif v == gc.materials.rock then
+            color = gc.colors.rock
           elseif v == gc.materials.player[1] or v == gc.materials.player[2] then
             local pIdx = v - gc.materials.player[1] + 1
             color  = players[pIdx].digging and gc.colors.earth or gc.colors.dirt
@@ -274,7 +284,7 @@ function World:redraw()
     G.setCanvas()
 end
 
-function World:draw()
+function Client:draw()
   G.setColor(1, 1, 1, 1)
   G.draw(self.canvas, self.x, self.y)
 
@@ -283,7 +293,7 @@ function World:draw()
   self.lp2:draw()
 end
 
-function World:onKey(key)
+function Client:onKey(key)
     if key == 'escape' then
         peer:disconnect_now()
         love.event.quit()
@@ -296,7 +306,7 @@ function World:onKey(key)
     end
 end
 
-function World:onKeyUp(key)
+function Client:onKeyUp(key)
     for _, k in ipairs(keyBindings) do
         if key == k then
             peer:send("ku " .. key)
@@ -304,4 +314,4 @@ function World:onKeyUp(key)
     end
 end
 
-return World
+return Client
