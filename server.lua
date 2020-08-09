@@ -35,9 +35,9 @@ local clientIdToPlayerIdx
 local nextPlayerMoveDt = 0.05
 local nextPlayerMoveT = nextPlayerMoveDt
 local nextBleedDt = 0.2
-local bleedSpeedFactor = 0.98
 local nextBleedT
 local winCapture = 300
+local bleedSpeedFactor
 local gameGoingOn
 
 local oilCells
@@ -81,6 +81,8 @@ local function newGame()
     srv.broadcast('ng')
 
     gameGoingOn = true
+
+    bleedSpeedFactor = 0.98
 
     T = 0
     srv.setTime(T)
