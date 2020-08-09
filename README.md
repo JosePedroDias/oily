@@ -23,6 +23,7 @@ _Controls_:
 
 ## TODO 🧑‍🍳
 
+- confirm players don't spawn in oil or rock (deadlock)
 - debug server stability issues
 - eyecandy
   - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)

@@ -8,9 +8,6 @@ local consts = require "src.core.consts"
 
 math.randomseed(os.time())
 
--- local lovebird = require("lovebird")
--- lovebird.init()
-
 local srv = {}
 
 ----
@@ -32,11 +29,15 @@ local players
 
 local clientIdToPlayerIdx
 
-local nextPlayerMoveDt = 0.04
-local nextPlayerMoveT = nextPlayerMoveDt
-local nextBleedDt = 0.2
+local NEXT_PLAYER_MOVE_DT = 0.04
+local INITIAL_NEXT_BLEED_DT = 0.2
+local INITIAL_BLEED_SPEED_FACTOR = 0.98
+local WIN_CAPTURE = 300
+
+local nextPlayerMoveT
+local nextBleedDt
 local nextBleedT
-local winCapture = 300
+
 local bleedSpeedFactor
 local gameGoingOn
 
@@ -81,7 +82,9 @@ local function newGame()
     srv.broadcast('ng')
 
     gameGoingOn = true
-    bleedSpeedFactor = 0.98
+    nextBleedDt = INITIAL_NEXT_BLEED_DT
+    bleedSpeedFactor = INITIAL_BLEED_SPEED_FACTOR
+    nextPlayerMoveT = NEXT_PLAYER_MOVE_DT
     T = 0
     srv.setTime(T)
 
@@ -89,11 +92,9 @@ local function newGame()
 
     -- matrix
     m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)
-
+    
+    --fill the sky
     mm.srect(1, 1, gc.W, skyY, gc.materials.sky)
-
-    -- terrain
-    --raster.line(60, 60, 80, 80, mm, gc.materials.earth)
 
     -- caves with perlin noise
     local ns = 0.05
@@ -161,18 +162,11 @@ local function newGame()
         flood.carveHole(pl.pos, gc.materials.player[pIdx], mm)
     end
 
-    --[[ Z = {}
-    Z.players = players
-    Z.oilCells = oilCells
-    Z.m = m ]]
-
     -- set oil velocity
     updateNextBleedT(0)
 end
 
 local function update(t)
-    -- lovebird.update()
-
     T = t
 
     if not gameGoingOn then
@@ -180,7 +174,7 @@ local function update(t)
     end
 
     if t >= nextPlayerMoveT then
-        nextPlayerMoveT = t + nextPlayerMoveDt
+        nextPlayerMoveT = t + NEXT_PLAYER_MOVE_DT
         for pIdx = 1, #players do
             local player = players[pIdx]
 
@@ -265,7 +259,7 @@ local function update(t)
                     --print('player ' .. pIdx .. ' captured ' .. pl.captured .. ' oil')
                     srv.broadcast('ca ' .. pIdx .. ',' .. pl.captured)
         
-                    if pl.captured >= winCapture then
+                    if pl.captured >= WIN_CAPTURE then
                     --print('player ' .. pIdx .. ' won!')
                     srv.broadcast('wo ' .. pIdx)
                     gameGoingOn = false
