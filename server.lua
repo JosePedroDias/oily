@@ -300,6 +300,10 @@ generateServer({
     local pIdx = clientIdToPlayerIdx[clientId]
     local player = players[pIdx]
 
+    if not player then
+        print('onReceive: player not found')
+    end
+
     local cmd = data:sub(1, 2)
     local key = data:sub(4)
 
