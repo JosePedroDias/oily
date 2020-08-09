@@ -78,6 +78,13 @@ local function randomPos(distanceFromEdge, gapFromSky)
 end
 
 local function newGame()
+    local numClients = srv.getNumClients()
+
+    -- stop any motors looping from a previous game...
+    for pIdx = 1, numClients do
+        srv.broadcast('pm ' .. pIdx .. ',f')
+    end
+
     print('new game!')
     srv.broadcast('ng')
 
@@ -87,8 +94,6 @@ local function newGame()
     nextPlayerMoveT = NEXT_PLAYER_MOVE_DT
     T = 0
     srv.setTime(T)
-
-    local numClients = srv.getNumClients()
 
     -- matrix
     m = utils.matrixCreate(gc.W, gc.H, gc.materials.dirt)

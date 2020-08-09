@@ -11,7 +11,7 @@ M.host = "nc.xsl.pt"
 -- M.host = "127.0.0.1"
 M.port = 52225
 
-M.version = "0.0.9" -- used for network, config compatibility and itch.io published deliverables
+M.version = "0.1.0" -- used for network, config compatibility and itch.io published deliverables
 M.gitHash = "__GITHASH__"
 M.gitDate = "__GITDATE__"
 
