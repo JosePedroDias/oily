@@ -11,9 +11,9 @@ local gfxDir = "assets/gfx"
 local sfxDir = "assets/sfx"
 
 M.load = function()
-  local mainF = LG.newFont(fontDir .. "/NotoSans-Regular.ttf", 18)
-  love.graphics.setFont(mainF)
-  M.fonts["main"] = mainF
+  M.fonts["main"] = LG.newFont(fontDir .. "/NotoSans-Regular.ttf", 18)
+  M.fonts["smaller"] = LG.newFont(fontDir .. "/NotoSans-Regular.ttf", 13)
+  love.graphics.setFont(M.fonts["main"])
   -- print('fonts #' .. utils.countKeys(M.fonts))
 
   M.gfx["player1"] = LG.newImage(gfxDir .. "/player-red.png")

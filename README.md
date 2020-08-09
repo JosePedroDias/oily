@@ -2,13 +2,13 @@
 
 ## TL;DR
 
-A multiplayer game.
+A multiplayer game over network. Can be played alone as well.
 Players are placed underground and have the objective of digging dirt so that oil reaches their tower(s).
-First player to capture 300 oil gallons win.
+First player to capture 100 oil gallons win.
 
-Each player can move either digging or placing dirt. There's a maximum amount of holes one can perform so
-use your potential carefully.
-Players can't touch oil so don't get surrounded by it ;)
+Each player can move either digging or placing dirt.
+There's a maximum amount of holes one can perform so use your potential carefully and fetch more from caves in the map.
+Players can't move past oil so don't get yourself surrounded by it!
 
 This game intended to be a submission to the [multiplayer game jam](https://itch.io/jam/multiplayer-jam) 🤞.
 
@@ -16,6 +16,7 @@ _Controls_:
 
 - arrows move the player
 - space bar toggles between placing and digging dirt (having reached 0 holes the mode switches for you as well)
+- there's the R button to start a new map (if you get stuck for instance) don't use it during a game please...
 
 ## TODO 🧑‍🍳
 

@@ -5,7 +5,6 @@ local utils = require "src.core.utils"
 local M = {}
 
 M.load = function()
-  love.window.setTitle("oily")
   M.w = Client:new({})
 end
 

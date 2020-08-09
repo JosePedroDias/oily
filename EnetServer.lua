@@ -36,7 +36,9 @@ local function generateServer(opts)
     assert(type(opts.onEnd) == "function", "onEnd should be a function")
   end
 
-  local host = enet.host_create("*:" .. opts.port)
+  -- https://leafo.net/lua-enet/#enethost_createbind_address_peer_count_channel_count_in_bandwidth_out_bandwidth
+  local host = enet.host_create("*:" .. opts.port, 2, 1, 0, 0)
+  -- TODO THIS IS ENFORCING MAX 2 PLAYERS IN A SINGLE CHANNEL. ANY OTHER CLIENTS WILL WAIT THEIR SLOT TO CONNECT
 
   -- bytes/sec
   -- host:bandwidth_limit(incoming, outgoing)

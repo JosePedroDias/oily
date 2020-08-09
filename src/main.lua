@@ -18,6 +18,9 @@ function love.load(arg)
   -- image resolution fix
   consts.devMode = true
 
+  love.window.setTitle("oily " .. consts.version)
+  -- love.window.setTitle("oily " .. consts.version .. " | " .. consts.host)
+
   if consts.devMode then
     print("in dev mode")
     -- screen.setSize(1024, 768, consts.W, consts.H, false)

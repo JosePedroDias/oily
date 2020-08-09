@@ -292,7 +292,7 @@ end
 print('oily server ' .. consts.version)
 generateServer({
   api = srv,
-  port = 52225,
+  port = consts.port,
   fps = 40,
   --debug = true,
   onUpdate = function(t)

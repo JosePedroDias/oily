@@ -7,33 +7,25 @@ local gc = require "src.game.consts"
 local assets = require "src.core.assets"
 local Label = require "src.ui.label"
 
--- local HOST = "127.0.0.1"
-local HOST = 'nc.xsl.pt'
-local PORT = 52225
-
-local host = enet.host_create()
-local peer = host:connect(HOST .. ":" .. PORT)
-
 local G = love.graphics
 
+local S = 6 -- cell size in pixels
+local KEY_BINDINGS = { 'left', 'right', 'up', 'down', 'space', 'r' }
 local D2R = math.pi / 180
 
-local Client = {x=0, y=0, width=consts.W, height=consts.H}
-
-local S = 6 -- cell size in pixels
-
-local KEY_BINDINGS = { 'left', 'right', 'up', 'down', 'space', 'r' }
+local host = enet.host_create()
+local peer = host:connect(consts.host .. ":" .. consts.port)
 
 local t = 0
 local connected = false
 local winnerIdx
 
-
-
 local players
 
 local gPlayers
 local gTowers
+
+local Client = {x=0, y=0, width=consts.W, height=consts.H}
 
 function Client:new(o)
   o = o or {}
@@ -42,16 +34,20 @@ function Client:new(o)
 
   print('oily client ' .. consts.version)
 
-  local lColor = {0.1, 0.1, 0.1}
-  -- local lBg = {0,0,0,0.3}
+  local darkClr = {0.1, 0.1, 0.1}
+  local whiteClr = {1, 1, 1}
+  
   local lBg = nil
+  local l2Bg = {0,0,0,0.3}
 
   gPlayers = { assets.gfx.player1,  assets.gfx.player2 }
   gTowers = { assets.gfx.tower1,  assets.gfx.tower2 }
 
-  o.l   = Label:new({x=consts.W/2-100, y=0, width=200, color=lColor, background=lBg})
-  o.lp1 = Label:new({x=0,              y=0, width=300, color=lColor, background=lBg})
-  o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, color=lColor, background=lBg})
+  o.l   = Label:new({x=consts.W/2-100, y=0, width=200, color=darkClr, background=lBg})
+  o.lp1 = Label:new({x=0,              y=0, width=300, color=darkClr, background=lBg})
+  o.lp2 = Label:new({x=consts.W-300,   y=0, width=300, color=darkClr, background=lBg})
+  local extra = 'oily ver:' .. consts.version .. ' ' .. consts.gitDate .. ' | if you see a black screen you are waiting for a slot to be available | https://josepedrodias.itch.io/oily'
+  o.lextra = Label:new({x=1, width=consts.W, y=consts.H-20, height=20, color=whiteClr, background=l2Bg, value=extra, font=assets.fonts["smaller"]})
   
   o.canvas = G.newCanvas(o.width, o.height)
 
@@ -166,12 +162,12 @@ function Client:update(dt)
 end
 
 function Client:updateLabel()
-  local txt = 'connected?' .. (connected and 'Y' or 'N')
-
-  if winnerIdx then
+  local txt = ''
+  if not connected then
+    txt = 'lost connection to server. please restart game'
+  elseif winnerIdx then
     txt = 'player #' .. winnerIdx .. ' won!'
   end
-
   self.l:setValue(txt)
 end
 
@@ -296,6 +292,7 @@ function Client:draw()
   self.l:draw()
   self.lp1:draw()
   self.lp2:draw()
+  self.lextra:draw()
 end
 
 function Client:onKey(key)
