@@ -206,12 +206,9 @@ function Client:update(dt)
             if #players == 1 then
               assets.sfx['win-solo']:play()
             else
-              -- TODO client needs to know which player he is!
-              assets.sfx['win-p1']:play()
-              -- assets.sfx['win-p2']:play()
+              assets.sfx['win-p' .. winnerIdx]:play()
             end
           elseif cmd == 'ng' then
-            -- isDirty = true
             self:reset()
           elseif cmd == 've' then
             if (args[1] ~= consts.version) then
