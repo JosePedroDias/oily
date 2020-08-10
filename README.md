@@ -1,4 +1,4 @@
-# sticky situation 🛢
+# Oily 🛢
 
 ## TL;DR
 
@@ -10,7 +10,7 @@ Each player can move either digging or placing dirt.
 There's a maximum amount of holes one can perform so use your potential carefully and fetch more from caves in the map.
 Players can't move past oil so don't get yourself surrounded by it!
 
-This game intended to be a submission to the [multiplayer game jam](https://itch.io/jam/multiplayer-jam) 🤞.
+This game is submission to the [multiplayer game jam](https://itch.io/jam/multiplayer-jam).
 
 _Controls_ ⌨️
 
@@ -38,9 +38,16 @@ _Controls_ ⌨️
   - confirm oil starts not in/surrounded by cave (not REQUIRED)
   - more than one tower per player? (may be confusing)
 
+## Game round management
+
+Playing always connects and interacts with the server. If no other player is around, you play solo. As soon as another player joins, a 2 player game starts - while you both are there you can play several games.
+
+If you get in when a 2 player game is happening, you will be queued to enter as soon as another players leaves.
+(I haven't thoroughly tested the retry code so in the unlikely event of you not getting in in 2-5 min restart the game).
+
 ## Credits 😅
 
-- game code and concept by José Pedro Dias
+- game code, concept and laughable artwork by José Pedro Dias;
 - additional game design and beta testing by António José da Silva.
 
 ## Resources 📖
