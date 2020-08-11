@@ -3,7 +3,7 @@ local assets = require "src.core.assets"
 local consts = require "src.core.consts"
 local screen = require "src.core.screen"
 local stages = require "src.core.stages"
--- local settings = require "src.core.settings"
+local settings = require "src.core.settings"
 
 -- local title = require "src.stages.title"
 local game = require "src.stages.game"
@@ -12,25 +12,14 @@ function love.load(arg)
   -- load resources
   assets.load()
 
-  -- settings.load()
+  settings.load()
 
   -- love.keyboard.setKeyRepeat(true)
-
-  -- image resolution fix
-  consts.devMode = true
 
   love.window.setTitle("oily " .. consts.version)
   -- love.window.setTitle("oily " .. consts.version .. " | " .. consts.host)
 
-  if consts.devMode then
-    print("in dev mode")
-    -- screen.setSize(1024, 768, consts.W, consts.H, false)
-    local W = 1000
-    screen.setSize(W, W * 0.75, consts.W, consts.H, false)
-  else
-    local sW, sH = screen.getCurrentResolution()
-    screen.setSize(sW, sH, consts.W, consts.H, true)
-  end
+  screen.setFullscreenState(settings.fullscreen)
 
   -- stages.setStage("title", title)
   stages.setStage("game", game)
@@ -59,7 +48,8 @@ function love.keyreleased(key, scancode)
   stages.currentStage.onKeyUp(key, scancode)
 end
 
-function love.mousepressed(_x, _y)
+-- NOT IN USE IN THIS GAME
+--[[ function love.mousepressed(_x, _y)
   local x, y = screen.coords(_x, _y)
   stages.currentStage.onPointer(x, y)
 end
@@ -76,7 +66,7 @@ end
 
 function love.textinput(text)
   stages.currentStage.onTextInput(text)
-end
+end ]]
 
 local function error_printer(msg, layer)
   print(debug.traceback("Error: " .. tostring(msg), 1 + (layer or 1)):gsub(

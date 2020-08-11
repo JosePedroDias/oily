@@ -6,16 +6,12 @@ local LF = love.filesystem
 
 -- will be stored at:
 -- C:\Users\josep\AppData\Roaming\LOVE\oily\settings.json
--- ~/Library/Application Support/LOVE/oily/settings.json
+-- ~/Library/Application\ Support/LOVE/oily/settings.json
 local SETTINGS_FILE = "settings.json"
 
 local DEFAULTS = {
-  server = "acor.sl.pt",
-  port = 1337,
-  channel = "ch1",
-  username = "john doe",
-  email = "john.doe@somewhere.com",
-  color = 1,
+  fullscreen = false,
+  sfx = true,
   version = consts.version
 }
 

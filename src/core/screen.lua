@@ -2,6 +2,9 @@
 take a look at main.lua to check how this is set up ]] --
 -- https://github.com/JosePedroDias/7min/blob/master/src/screen.moon
 -- https://github.com/Ulydev/push
+
+local consts = require "src.core.consts"
+
 local G = love.graphics
 local W = love.window
 
@@ -83,6 +86,23 @@ end
 
 M.coords = function(_x, _y)
   return (_x - x) / scale, (_y - y) / scale
+end
+
+-- M.initialW
+-- M.initialH
+
+M.setFullscreenState = function(bool)
+  if not M.initialW then
+    M.initialW, M.initialH = M.getCurrentResolution()
+  end
+
+  if not bool then
+    local WW = 1024 -- TODO: game logic, should not be here...
+    M.setSize(WW, WW * 0.75, consts.W, consts.H, false)
+  else
+    -- local sW, sH = M.getCurrentResolution()
+    M.setSize(M.initialW, M.initialH, consts.W, consts.H, true)
+  end
 end
 
 return M

@@ -17,6 +17,8 @@ _Controls_ ⌨️
 - `arrows` move the player
 - `space bar` toggles between placing and digging dirt (having reached 0 holes the mode switches for you as well)
 - `R` starts a new map (if you get stuck for instance). Please don't use it during a game 🙏
+- `F` toggles fullscreen
+- `S` toggles sound effects
 
 ## TODO 🧑‍🍳
 

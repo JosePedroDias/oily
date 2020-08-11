@@ -1,10 +1,13 @@
 --[[ Client ]] --
 
 local enet = require "enet"
+
 local utils = require "src.core.utils"
 local consts = require "src.core.consts"
-local gc = require "src.game.consts"
+local settings = require "src.core.settings"
 local assets = require "src.core.assets"
+local screen = require "src.core.screen"
+local gc = require "src.game.consts"
 local Label = require "src.ui.label"
 
 local G = love.graphics
@@ -77,7 +80,9 @@ end
 function Client:reset()
   print('new game!')
 
-  assets.sfx.go:play()
+  if settings.sfx then
+    assets.sfx.go:play()
+  end
 
   winnerIdx = nil
 
@@ -106,7 +111,9 @@ end
 
 local function toggleSampleIfNecessary(sample, freq)
   if freq > 0 and not sample:isPlaying() then
-    sample:play()
+    if settings.sfx then
+      sample:play()
+    end
   elseif freq == 0 and sample:isPlaying() then
     sample:stop()
   end
@@ -167,7 +174,9 @@ function Client:update(dt)
             local isMoving = args[2] == 't'
             local sample = pIdx == 1 and assets.sfx.motor1 or assets.sfx.motor2
             if isMoving then
-              love.audio.play(sample)
+              if settings.sfx then
+                love.audio.play(sample)
+              end
             else
               sample:stop()
             end
@@ -189,7 +198,9 @@ function Client:update(dt)
             self:updateLabelPlayer(pIdx)
             -- play mode change queue (busted is different)
             local sample = players[pIdx].holesLeft < 4 and assets.sfx.setModeEmpty or assets.sfx.setMode
-            love.audio.play(sample)
+            if settings.sfx then
+              love.audio.play(sample)
+            end
 
             -- change pitch of motor sample
             sample = pIdx == 1 and assets.sfx.motor1 or assets.sfx.motor2
@@ -203,10 +214,12 @@ function Client:update(dt)
             local pIdx = tonumber(args[1])
             winnerIdx = pIdx
             self:updateLabel()
-            if #players == 1 then
-              assets.sfx['win-solo']:play()
-            else
-              assets.sfx['win-p' .. winnerIdx]:play()
+            if settings.sfx then
+              if #players == 1 then
+                assets.sfx['win-solo']:play()
+              else
+                assets.sfx['win-p' .. winnerIdx]:play()
+              end
             end
           elseif cmd == 'ng' then
             self:reset()
@@ -390,17 +403,36 @@ function Client:draw()
   self.lextra:draw()
 end
 
+function Client:toggleFullscreen()
+  settings.fullscreen = not settings.fullscreen
+  screen.setFullscreenState(settings.fullscreen)
+  settings.save()
+end
+
+function Client:toggleSfx()
+  settings.sfx = not settings.sfx
+  if not settings.sfx then
+    for _, sample in pairs(assets.sfx) do
+      sample:stop()
+    end
+  end
+  settings.save()
+end
+
 function Client:onKey(key)
+  -- client handled keys
     if key == 'escape' then
         peer:disconnect()
         host:flush()
         love.event.quit()
+    elseif key == 'f' then
+      self:toggleFullscreen()
+      self:redraw() -- TODO: required?
+    elseif key == 's' then
+      self:toggleSfx()
     end
 
-    -- love.audio.play(assets.sfx.oil) -- seems good for no more holes or digging
-    -- love.audio.play(assets.sfx.dirt)
-    -- love.audio.play(assets.sfx.motor1) -- needs cutting
-
+    -- server handled keys
     for _, k in ipairs(KEY_BINDINGS) do
         if key == k then
             peer:send("kd " .. key)
@@ -409,6 +441,7 @@ function Client:onKey(key)
 end
 
 function Client:onKeyUp(key)
+  -- server handled keys
     for _, k in ipairs(KEY_BINDINGS) do
         if key == k then
             peer:send("ku " .. key)
