@@ -22,14 +22,16 @@ _Controls_ ⌨️
 
 ## TODO 🧑‍🍳
 
-- title screen 🇴 🇮 🇱 🇾 (ongoing...)
-- instructions 📃
+- title screen 💯 (ongoing...)
+  - convert title image to matrix (WIP, buggy)
+  - refactor client to render a custom update fn
+  - add menu/transition
+- in-game instructions 📃
 - eyecandy 🌈
-  - fullscreen toggle
-  - hint exact placement of extraction (vertical line in tower)
-  - add a sky texture
   - use textures instead of solid colors for materials (https://love2d.org/wiki/love.graphics.polygon + texture vs surface stencil)
   - close in camera according to action context
+  - hint exact placement of extraction (vertical line in tower)
+  - add a sky texture
 - network 🕸
   - for now 2 slots in a single channel/session. additional people wait for turn to enter
   - remove space btw cmd and args in netcode

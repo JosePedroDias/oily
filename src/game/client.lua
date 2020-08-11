@@ -253,7 +253,11 @@ function Client:updateLabel()
   if not connected then
     txt = 'lost connection to server. please restart game'
   elseif winnerIdx then
-    txt = 'player #' .. winnerIdx .. ' won!'
+    if #players == 1 then
+      txt = 'you win!' -- TODO: #players in currently constant as 2
+    else
+      txt = 'player #' .. winnerIdx .. ' wins!'
+    end
   end
   self.l:setValue(txt)
 end
@@ -407,16 +411,22 @@ function Client:toggleFullscreen()
   settings.fullscreen = not settings.fullscreen
   screen.setFullscreenState(settings.fullscreen)
   settings.save()
+
+  local toRedraw = { self.l, self.lp1, self.lp2, self.lextra, self }
+  for _, o in ipairs(toRedraw) do
+    o:redraw()
+  end
 end
 
 function Client:toggleSfx()
   settings.sfx = not settings.sfx
+  settings.save()
+
   if not settings.sfx then
     for _, sample in pairs(assets.sfx) do
       sample:stop()
     end
   end
-  settings.save()
 end
 
 function Client:onKey(key)
@@ -427,7 +437,6 @@ function Client:onKey(key)
         love.event.quit()
     elseif key == 'f' then
       self:toggleFullscreen()
-      self:redraw() -- TODO: required?
     elseif key == 's' then
       self:toggleSfx()
     end
