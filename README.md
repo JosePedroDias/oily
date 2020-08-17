@@ -10,7 +10,7 @@ Each player can move either digging or placing dirt.
 There's a maximum amount of holes one can perform so use your potential carefully and fetch more from caves in the map.
 Players can't move past oil so don't get yourself surrounded by it!
 
-This game is submission to the [multiplayer game jam](https://itch.io/jam/multiplayer-jam).
+This game is submission to the [multiplayer game jam](https://itch.io/jam/multiplayer-jam). It was voted 3rd out of 7 games submitted.
 
 _Controls_ ⌨️
 
